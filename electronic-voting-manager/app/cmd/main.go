@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/eth/voting"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"log"
 	"time"
@@ -20,7 +21,7 @@ func main() {
 
 	session, err := voting.NewSession(context.Background(), client, cfg)
 	if err != nil {
-
+		log.Fatal(err)
 	}
 
 	//only for testing---------------------------------------------
@@ -28,12 +29,36 @@ func main() {
 	title := "title"
 	tString := "2023-03-26 15:04:05"
 	t, _ := time.Parse("2006-01-02 15:04:05", tString)
-	//--------------------------------------------------------------
 
-	contractAddress, err := voting.RegisterVote(session, client, title, t, options)
+	contractAddressStr, err := voting.RegisterVote(session, client, title, t, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(contractAddressStr)
+
+	contractAddress := common.HexToAddress(contractAddressStr)
+
+	voterAddressStr := "0x23e4170970b57f335eD8362af9F97043770a4898"
+
+	voterAddress := common.HexToAddress(voterAddressStr)
+
+	balance, err := client.BalanceAt(context.Background(), voterAddress, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(contractAddress)
+	fmt.Println(balance)
+
+	err = voting.GiveRightVote(session, client, cfg, contractAddress, voterAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	balance, err = client.BalanceAt(context.Background(), voterAddress, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(balance)
+	//--------------------------------------------------------------
 }
