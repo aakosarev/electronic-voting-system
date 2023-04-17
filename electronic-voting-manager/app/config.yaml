@@ -4,3 +4,7 @@ blockchain:
   gas_limit: 10000000
   gas_price: 2000000000
   default_wei_founds: 0
+
+grpc:
+  ip: 0.0.0.0
+  port: 30000

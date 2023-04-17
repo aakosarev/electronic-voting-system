@@ -55,7 +55,7 @@ func NewSession(ctx context.Context, client *ethclient.Client, cfg *config.Confi
 	}, nil
 }
 
-func CreateContract(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time) (string, error) {
+func createContract(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time) (string, error) {
 	contractAddress, tx, instance, err := DeployContract(&session.TransactOpts, client, votingTitle, big.NewInt(votingEndTime.Unix()))
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy the contract: %w", err)
@@ -78,7 +78,7 @@ func CreateContract(session *ContractSession, client *ethclient.Client, votingTi
 	return contractAddress.Hex(), nil
 }
 
-func LoadContract(session *ContractSession, client *ethclient.Client, address common.Address) error {
+func loadContract(session *ContractSession, client *ethclient.Client, address common.Address) error {
 	instance, err := NewContract(address, client)
 	if err != nil {
 		return fmt.Errorf("failed to load the contract: %w", err)
@@ -87,20 +87,20 @@ func LoadContract(session *ContractSession, client *ethclient.Client, address co
 	return nil
 }
 
-func RegisterVote(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time, votingOptions []string) (string, error) {
-	contractAddressString, err := CreateContract(session, client, votingTitle, votingEndTime)
+func CreateVoting(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time, votingOptions []string) (string, error) {
+	contractAddressString, err := createContract(session, client, votingTitle, votingEndTime)
 	if err != nil {
 		return "", fmt.Errorf("failed voting registration: %w", err)
 	}
 
 	contractAddress := common.HexToAddress(contractAddressString)
 
-	err = AddVotingOptions(session, client, contractAddress, votingOptions)
+	err = addVotingOptions(session, client, contractAddress, votingOptions)
 	if err != nil {
 		return "", fmt.Errorf("failed addition of voting options: %w", err)
 	}
 
-	err = CompleteOptions(session, client, contractAddress)
+	err = completeOptions(session, client, contractAddress)
 	if err != nil {
 		return "", fmt.Errorf("error complete options: %v", err)
 	}
@@ -108,8 +108,8 @@ func RegisterVote(session *ContractSession, client *ethclient.Client, votingTitl
 	return contractAddress.Hex(), nil
 }
 
-func AddVotingOptions(session *ContractSession, client *ethclient.Client, address common.Address, votingOptions []string) error {
-	err := LoadContract(session, client, address)
+func addVotingOptions(session *ContractSession, client *ethclient.Client, address common.Address, votingOptions []string) error {
+	err := loadContract(session, client, address)
 	if err != nil {
 		return err
 	}
@@ -144,8 +144,8 @@ func AddVotingOptions(session *ContractSession, client *ethclient.Client, addres
 	return nil
 }
 
-func CompleteOptions(session *ContractSession, client *ethclient.Client, address common.Address) error {
-	err := LoadContract(session, client, address)
+func completeOptions(session *ContractSession, client *ethclient.Client, address common.Address) error {
+	err := loadContract(session, client, address)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func CompleteOptions(session *ContractSession, client *ethclient.Client, address
 }
 
 func GiveRightVote(session *ContractSession, client *ethclient.Client, cfg *config.Config, address common.Address, voterAddress common.Address) error {
-	err := LoadContract(session, client, address)
+	err := loadContract(session, client, address)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func GiveRightVote(session *ContractSession, client *ethclient.Client, cfg *conf
 
 	tx = types.NewTransaction(nonce, voterAddress, value, session.TransactOpts.GasLimit, session.TransactOpts.GasPrice, nil)
 
-	fmt.Println(tx.Hash().Hex())
+	//fmt.Println(tx.Hash().Hex())
 
 	privateKey, err := crypto.HexToECDSA(cfg.Blockchain.PrivateKey)
 	if err != nil {
@@ -219,7 +219,7 @@ func GiveRightVote(session *ContractSession, client *ethclient.Client, cfg *conf
 		return fmt.Errorf("failed transaction signing: %w", err)
 	}
 
-	fmt.Println(signedTx.Hash().Hex())
+	//fmt.Println(signedTx.Hash().Hex())
 
 	err = client.SendTransaction(context.Background(), signedTx)
 	if err != nil {

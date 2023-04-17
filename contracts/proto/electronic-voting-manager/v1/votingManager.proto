@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option go_package = "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+message CreateVotingRequest {
+  string votingTitle = 1;
+  repeated string votingOptions = 2;
+  google.protobuf.Timestamp endTime = 3;
+}
+
+message Voting {
+  int32 votingID = 1;
+  string votingTitle = 2;
+  int64 endTime = 3;
+  string address = 4;
+  google.protobuf.Timestamp createdOn = 5;
+}
+
+message GetAllVotingsResponse {
+  repeated Voting votings = 1;
+}
+
+message AddRightToVoteRequest {
+  int32 userID = 1;
+  int32 votingID = 2;
+}
+
+service VotingManager {
+  rpc CreateVoting(CreateVotingRequest) returns (google.protobuf.Empty);
+  rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
+  rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
+}

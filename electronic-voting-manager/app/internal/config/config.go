@@ -14,6 +14,10 @@ type Config struct {
 		GasPrice   int64  `yaml:"gas_price"`
 		WeiFounds  int64  `yaml:"default_wei_founds"`
 	} `yaml:"blockchain"`
+	GRPC struct {
+		IP   string `yaml:"ip"`
+		Port int    `yaml:"port"`
+	} `yaml:"grpc"`
 }
 
 var instance *Config
