@@ -18,6 +18,13 @@ type Config struct {
 		IP   string `yaml:"ip"`
 		Port int    `yaml:"port"`
 	} `yaml:"grpc"`
+	PostgreSQL struct {
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+		Database string `yaml:"database"`
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+	} `yaml:"postgresql"`
 }
 
 var instance *Config

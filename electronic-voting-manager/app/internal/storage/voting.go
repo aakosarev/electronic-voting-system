@@ -33,7 +33,7 @@ func (s *Storage) FindVotings(ctx context.Context) ([]*model.Voting, error) {
 	return votings, nil
 }
 
-func (s *Storage) FindVotingByID(ctx context.Context, votingID int) (*model.Voting, error) {
+func (s *Storage) FindVotingByID(ctx context.Context, votingID int32) (*model.Voting, error) {
 	query := `
 		SELECT id, title, end_time, address, created_on
 		FROM voting
@@ -50,7 +50,7 @@ func (s *Storage) FindVotingByID(ctx context.Context, votingID int) (*model.Voti
 	return voting, nil
 }
 
-func (s *Storage) AddRightToVote(ctx context.Context, userID, votingID int) error {
+func (s *Storage) AddRightToVote(ctx context.Context, userID, votingID int32) error {
 	query := `
 		INSERT INTO right_to_vote(user_id, voting_id)
 		VALUES ($1, $2);
@@ -78,7 +78,7 @@ func (s *Storage) AddVoting(ctx context.Context, title string, endTime int64, ad
 	return nil
 }
 
-func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int) ([]*model.VotingAvailableToUser, error) {
+func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error) {
 	query := `
 		SELECT rtv.user_id, rtv.voting_id, rtv.created_on, v.name, v.address
 		FROM right_to_vote rtv

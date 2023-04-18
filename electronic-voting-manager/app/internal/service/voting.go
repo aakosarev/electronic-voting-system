@@ -10,10 +10,10 @@ import (
 
 type storage interface {
 	FindVotings(ctx context.Context) ([]*model.Voting, error)
-	FindVotingByID(ctx context.Context, votingID int) (*model.Voting, error)
-	AddRightToVote(ctx context.Context, userID, votingID int) error
+	FindVotingByID(ctx context.Context, votingID int32) (*model.Voting, error)
+	AddRightToVote(ctx context.Context, userID, votingID int32) error
 	AddVoting(ctx context.Context, title string, endTime int64, address string) error
-	FindVotingsAvailableToUser(ctx context.Context, userID int) ([]*model.VotingAvailableToUser, error)
+	FindVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error)
 }
 
 type Service struct {
@@ -53,7 +53,7 @@ func (s *Service) GetAllVotings(ctx context.Context) ([]*model.Voting, error) {
 	return votings, nil
 }
 
-func (s *Service) AddRightToVote(ctx context.Context, userID, votingID int) error {
+func (s *Service) AddRightToVote(ctx context.Context, userID, votingID int32) error {
 	err := s.storage.AddRightToVote(ctx, userID, votingID)
 	if err != nil {
 		return err
