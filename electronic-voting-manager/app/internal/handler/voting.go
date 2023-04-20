@@ -49,7 +49,7 @@ func (h *Handler) GetAllVotings(ctx context.Context, _ *emptypb.Empty) (*pb.GetA
 }
 
 func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequest) (*emptypb.Empty, error) {
-	err := h.service.AddRightToVote(ctx, req.UserID, req.VotingID)
+	err := h.service.AddRightToVote(ctx, req.GetUserID(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}

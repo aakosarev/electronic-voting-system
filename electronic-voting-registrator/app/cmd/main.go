@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/app"
-	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-registrator/internal/app"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-registrator/internal/config"
 	"log"
 )
 
