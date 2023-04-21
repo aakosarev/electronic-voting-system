@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-app/v1";
+
+import "google/protobuf/empty.proto";
+
+message RegisterUserRequest {
+  int32 username = 1;
+  string password = 2;
+}
+
+service VotingApp {
+  rpc RegisterUser(RegisterUserRequest) returns (google.protobuf.Empty);
+}
