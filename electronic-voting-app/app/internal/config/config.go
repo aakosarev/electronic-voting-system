@@ -7,18 +7,21 @@ import (
 )
 
 type Config struct {
+	GRPC struct {
+		IP   string `yaml:"ip"`
+		Port int    `yaml:"port"`
+	} `yaml:"grpc"`
+	PostgreSQL struct {
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+		Database string `yaml:"database"`
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+	} `yaml:"postgresql"`
 	HTTP struct {
 		IP   string `yaml:"ip"`
 		Port int    `yaml:"port"`
 	} `yaml:"http"`
-	VotingManagerGRPC struct {
-		IP   string `yaml:"ip"`
-		Port int    `yaml:"port"`
-	} `yaml:"voting-manager-grpc"`
-	VotingAppGRPC struct {
-		IP   string `yaml:"ip"`
-		Port int    `yaml:"port"`
-	} `yaml:"voting-app-grpc"`
 }
 
 var instance *Config

@@ -1,7 +1,7 @@
 github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I=
 github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230418121648-db6c8a529db0 h1:ZZVsaOmYYWee/bY++EelILbutz7MpKY2DDQmd6Y1VAQ=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230418121648-db6c8a529db0/go.mod h1:nL6VDJOuq/CbTWsAjNny3O7gIOpAbLD40Bh7U+Qbc3Q=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230421105818-d502904cb1d6 h1:4d4Xrs2mAGaH3oAzUegTHZe2b8CD1o9GIYjhpRd1U4E=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230421105818-d502904cb1d6/go.mod h1:nL6VDJOuq/CbTWsAjNny3O7gIOpAbLD40Bh7U+Qbc3Q=
 github.com/golang/protobuf v1.5.0/go.mod h1:FsONVRAS9T7sI+LIUmWTfcYkHO4aIWwzhcaSAoJOfIk=
 github.com/golang/protobuf v1.5.2 h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=
 github.com/golang/protobuf v1.5.2/go.mod h1:XVQd3VNwM+JqD3oG2Ue2ip4fOMUkwXdXDdiuN0vRsmY=

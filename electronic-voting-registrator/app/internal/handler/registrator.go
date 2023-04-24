@@ -3,22 +3,29 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	pbva "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-app/v1"
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-registrator/internal/model"
 	"github.com/julienschmidt/httprouter"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Handler struct {
 	votingManagerClient pbvm.VotingManagerClient
+	votingAppClient     pbva.VotingAppClient
 }
 
-func NewHandler(connVotingManager *grpc.ClientConn) *Handler {
-	return &Handler{votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager)}
+func NewHandler(connVotingManager, connVotingApp *grpc.ClientConn) *Handler {
+	return &Handler{
+		votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager),
+		votingAppClient:     pbva.NewVotingAppClient(connVotingApp),
+	}
 }
 
 func (h *Handler) Register(router *httprouter.Router) {
@@ -65,18 +72,55 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req := &pbvm.AddRightToVoteRequest{
-		UserID:   addRightToVoteReq.UserID,
-		VotingID: addRightToVoteReq.VotingID,
+	rand.Seed(time.Now().UnixNano())
+	userID := rand.Int31n(99001) + 1000
+
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+"
+	b := make([]byte, 20)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	password := string(b)
+
+	reqToVotingApp := &pbva.RegisterUserRequest{
+		Username: userID,
+		Password: password,
 	}
 
-	_, err = h.votingManagerClient.AddRightToVote(r.Context(), req)
+	_, err = h.votingAppClient.RegisterUser(r.Context(), reqToVotingApp)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	for _, v := range addRightToVoteReq.VotingIDs {
+		reqToVotingManager := &pbvm.AddRightToVoteRequest{
+			UserID:   userID,
+			VotingID: v,
+		}
+		_, err = h.votingManagerClient.AddRightToVote(r.Context(), reqToVotingManager)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	credentials := model.AddRightToVoteResp{
+		UserID:   userID,
+		Password: password,
+	}
+
+	credentialsJson, err := json.Marshal(credentials)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
+	w.Write(credentialsJson)
 }
 
 func (h *Handler) GetAllVotings(w http.ResponseWriter, r *http.Request) {

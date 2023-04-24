@@ -27,7 +27,12 @@ func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	registratorHandler := handler.NewHandler(votingManagerConn)
+	votingAppConn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.VotingAppGRPC.IP, cfg.VotingAppGRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
+	registratorHandler := handler.NewHandler(votingManagerConn, votingAppConn)
 
 	registratorHandler.Register(router)
 
