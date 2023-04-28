@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS "user" (
     username INTEGER PRIMARY KEY,
-    password VARCHAR(50) NOT NULL,
+    password_hash VARCHAR(60) NOT NULL,
     email VARCHAR(50) NULL,
     first_name VARCHAR(50) NULL,
     second_name VARCHAR(50) NULL,

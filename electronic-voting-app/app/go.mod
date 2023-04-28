@@ -3,7 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-app
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230421105818-d502904cb1d6
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230428110906-901552a5eebc
 	github.com/georgysavva/scany v1.2.1
 	github.com/google/uuid v1.3.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
@@ -29,10 +29,10 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

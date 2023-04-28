@@ -20,7 +20,7 @@ func NewHandler(userStorage *storage.UserStorage, srv pb.UnimplementedVotingAppS
 }
 
 func (h *Handler) RegisterUser(ctx context.Context, req *pb.RegisterUserRequest) (*emptypb.Empty, error) {
-	err := h.userStorage.Create(ctx, req.GetUsername(), req.GetPassword())
+	err := h.userStorage.Create(ctx, req.GetUsername(), req.GetPasswordHash())
 	if err != nil {
 		return nil, err
 	}

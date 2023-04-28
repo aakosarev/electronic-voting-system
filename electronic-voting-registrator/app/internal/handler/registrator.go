@@ -7,6 +7,7 @@ import (
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-registrator/internal/model"
 	"github.com/julienschmidt/httprouter"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -80,9 +81,15 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 	}
 	password := string(b)
 
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	reqToVotingApp := &pbva.RegisterUserRequest{
-		Username: userID,
-		Password: password,
+		Username:     userID,
+		PasswordHash: string(passwordHash),
 	}
 
 	_, err = h.votingAppClient.RegisterUser(r.Context(), reqToVotingApp)
@@ -91,10 +98,10 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, v := range addRightToVoteReq.VotingIDs {
+	for _, votingID := range addRightToVoteReq.VotingIDs {
 		reqToVotingManager := &pbvm.AddRightToVoteRequest{
 			UserID:   userID,
-			VotingID: v,
+			VotingID: votingID,
 		}
 		_, err = h.votingManagerClient.AddRightToVote(r.Context(), reqToVotingManager)
 		if err != nil {
@@ -144,7 +151,7 @@ func (h *Handler) GetAllVotings(w http.ResponseWriter, r *http.Request) {
 	votingsJson, err := json.Marshal(votings)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"message":"%s"}`, err.Error())))
+		w.Write([]byte(fmt.Sprintf(`{"message": "%s"}`, err.Error())))
 		return
 	}
 

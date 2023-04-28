@@ -16,13 +16,13 @@ func NewUserStorage(client postgresql.Client) *UserStorage {
 	}
 }
 
-func (s *UserStorage) Create(ctx context.Context, username int32, password string) error {
+func (s *UserStorage) Create(ctx context.Context, username int32, passwordHash string) error {
 	query := `
-		INSERT INTO "user"(username, password)
+		INSERT INTO "user"(username, password_hash)
 		VALUES ($1, $2);
 	`
 
-	_, err := s.client.Exec(ctx, query, username, password)
+	_, err := s.client.Exec(ctx, query, username, passwordHash)
 	if err != nil {
 		return err
 	}
@@ -30,34 +30,51 @@ func (s *UserStorage) Create(ctx context.Context, username int32, password strin
 	return nil
 }
 
-func (s *UserStorage) GetPassByUsername(ctx context.Context, username int32) (string, error) {
+func (s *UserStorage) GetPasswordHashByUsername(ctx context.Context, username int32) (string, error) {
 	query := `
-		SELECT password
+		SELECT password_hash
 		FROM "user"
 		WHERE username = $1;
 	`
 
-	var password string
+	var passwordHash string
 
-	err := pgxscan.Get(ctx, s.client, &password, query, username)
+	err := pgxscan.Get(ctx, s.client, &passwordHash, query, username)
 	if err != nil {
 		return "", err
 	}
 
-	return password, nil
+	return passwordHash, nil
 }
 
-func (s *UserStorage) Update(ctx context.Context, username int32, password, email, firstName, secondName string) error {
+func (s *UserStorage) AddDetails(ctx context.Context, username int32, passwordHash, email, firstName, secondName string) error {
 	query := `
 		UPDATE "user"
-		SET password = $2, email = $3, first_name = $4, second_name = $5, force_enter_details = $6
+		SET password_hash = $2, email = $3, first_name = $4, second_name = $5, force_enter_details = $6
 		WHERE username = $1
 	`
 
-	_, err := s.client.Exec(ctx, query, username, password, email, firstName, secondName, false)
+	_, err := s.client.Exec(ctx, query, username, passwordHash, email, firstName, secondName, false)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *UserStorage) GetForceEnterDetailsByUsername(ctx context.Context, username int32) (bool, error) {
+	query := `
+		SELECT force_enter_details
+		FROM "user"
+		WHERE username = $1;
+	`
+
+	var forceEnterDetails bool
+
+	err := pgxscan.Get(ctx, s.client, &forceEnterDetails, query, username)
+	if err != nil {
+		return false, err
+	}
+
+	return forceEnterDetails, nil
 }

@@ -2,12 +2,14 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/model"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/storage"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"log"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -37,6 +39,52 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.HandlerFunc(http.MethodPost, "/initial_login", h.InitialLogin)
 	router.HandlerFunc(http.MethodGet, "/logout", h.Logout)
 	router.HandlerFunc(http.MethodPost, "/refresh", h.Refresh)
+	router.GET("/force_enter_details/:user_id", h.ForceEnterDetails)
+}
+
+func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+
+	c, err := r.Cookie("session_token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	sessionToken := c.Value
+
+	userSession, exists := sessions[sessionToken]
+	if !exists {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if userSession.isExpired() {
+		delete(sessions, sessionToken)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	userIDstr := ps.ByName("user_id")
+
+	userID, err := strconv.Atoi(userIDstr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	forceEnterDetails, err := h.userStorage.GetForceEnterDetailsByUsername(r.Context(), int32(userID))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"force_enter_details": %t}`, forceEnterDetails)))
+
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -49,13 +97,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := h.userStorage.GetPassByUsername(r.Context(), loginUser.Username)
+	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), loginUser.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if password != loginUser.Password {
+	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(loginUser.Password)); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -114,19 +162,25 @@ func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	password, err := h.userStorage.GetPassByUsername(r.Context(), userSession.username)
+	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if password != ilu.OldPassword {
-		w.WriteHeader(http.StatusBadRequest)
+	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(ilu.OldPassword)); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
 		// TODO w.Write error
 		return
 	}
 
-	err = h.userStorage.Update(r.Context(), userSession.username, ilu.NewPassword, ilu.Email, ilu.FirstName, ilu.SecondName)
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(ilu.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = h.userStorage.AddDetails(r.Context(), userSession.username, string(newPasswordHash), ilu.Email, ilu.FirstName, ilu.SecondName)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -149,7 +203,6 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionToken := c.Value
-	log.Println("out", sessionToken)
 	delete(sessions, sessionToken)
 
 	http.SetCookie(w, &http.Cookie{
