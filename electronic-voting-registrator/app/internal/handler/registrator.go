@@ -40,7 +40,6 @@ func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
 	createVotingReq := model.CreateVotingReq{}
 	err := json.NewDecoder(r.Body).Decode(&createVotingReq)
 	if err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -55,7 +54,6 @@ func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.votingManagerClient.CreateVoting(r.Context(), req)
 	if err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -89,7 +87,6 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.votingAppClient.RegisterUser(r.Context(), reqToVotingApp)
 	if err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -101,7 +98,6 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 		}
 		_, err = h.votingManagerClient.AddRightToVote(r.Context(), reqToVotingManager)
 		if err != nil {
-			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -114,7 +110,6 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 
 	credentialsJson, err := json.Marshal(credentials)
 	if err != nil {
-		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

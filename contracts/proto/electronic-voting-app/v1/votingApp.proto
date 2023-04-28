@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 
 message RegisterUserRequest {
   int32 username = 1;
-  string password = 2;
+  string passwordHash = 2;
 }
 
 service VotingApp {
