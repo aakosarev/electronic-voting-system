@@ -80,7 +80,7 @@ func (s *Storage) AddVoting(ctx context.Context, title string, endTime int64, ad
 
 func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error) {
 	query := `
-		SELECT rtv.user_id, rtv.voting_id, rtv.created_on, v.name, v.address
+		SELECT rtv.user_id, rtv.voting_id, rtv.created_on, v.title, v.address
 		FROM right_to_vote rtv
 		INNER JOIN voting v on v.id = rtv.voting_id
 		WHERE rtv.user_id = $1
