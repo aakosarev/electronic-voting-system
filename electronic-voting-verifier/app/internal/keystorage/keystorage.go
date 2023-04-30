@@ -10,7 +10,13 @@ import (
 	"strconv"
 )
 
-func GenerateKeyPairForVotingID(votingID int32) error {
+type KeyStorage struct{}
+
+func NewKeyStorage() *KeyStorage {
+	return &KeyStorage{}
+}
+
+func (ks *KeyStorage) GenerateKeyPairForVotingID(votingID int32) error {
 	wd, _ := os.Getwd()
 	filenamePrivateKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_private.pem", wd, strconv.Itoa(int(votingID)))
 	filenamePublicKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_public.pem", wd, strconv.Itoa(int(votingID)))
@@ -61,7 +67,7 @@ func GenerateKeyPairForVotingID(votingID int32) error {
 	return nil
 }
 
-func GetPublicKeyForVotingID(votingID int32) (*rsa.PublicKey, error) {
+func (ks *KeyStorage) GetPublicKeyBytesForVotingID(votingID int32) ([]byte, error) {
 	wd, _ := os.Getwd()
 	filenamePublicKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_public.pem", wd, strconv.Itoa(int(votingID)))
 
@@ -70,17 +76,10 @@ func GetPublicKeyForVotingID(votingID int32) (*rsa.PublicKey, error) {
 		return nil, err
 	}
 
-	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
-
-	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return publicKey, nil
+	return publicKeyBytes, nil
 }
 
-func GetPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey, error) {
+func (ks *KeyStorage) GetPrivateKeyBytesForVotingID(votingID int32) ([]byte, error) {
 	wd, _ := os.Getwd()
 	filenamePrivateKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_private.pem", wd, strconv.Itoa(int(votingID)))
 
@@ -89,12 +88,5 @@ func GetPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	privateKeyPEM, _ := pem.Decode(privateKeyBytes)
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(privateKeyPEM.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return privateKey, nil
+	return privateKeyBytes, nil
 }

@@ -10,6 +10,17 @@ message GetPublicKeyForVotingIDResponse {
   bytes publicKeyBytes = 1;
 }
 
+message SignBlindedTokenRequest {
+  int32 userID = 1;
+  int32 votingID = 2;
+  string blindedToken = 3;
+}
+
+message SignBlindedTokenResponse {
+    string signedBlindedToken = 1;
+}
+
 service VotingVerifier {
   rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
+  rpc SignBlindedToken(SignBlindedTokenRequest) returns (SignBlindedTokenResponse);
 }
