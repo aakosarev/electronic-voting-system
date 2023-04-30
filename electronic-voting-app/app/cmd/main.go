@@ -18,8 +18,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Running Application")
-
 	err = a.Run(ctx)
 	if err != nil {
 		log.Fatal(err)

@@ -56,3 +56,23 @@ func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequ
 
 	return &emptypb.Empty{}, nil
 }
+
+func (h *Handler) GetVotingsAvailableToUser(ctx context.Context, req *pb.GetVotingsAvailableToUserRequest) (*pb.GetVotingsAvailableToUserResponse, error) {
+	votingsAvailableToUser, err := h.service.GetVotingsAvailableToUser(ctx, req.GetUserID())
+	if err != nil {
+		return nil, err
+	}
+
+	pbVotingsAvailableToUser := make([]*pb.VotingAvailableToUser, len(votingsAvailableToUser))
+	for i, v := range votingsAvailableToUser {
+		pbVotingsAvailableToUser[i] = &pb.VotingAvailableToUser{
+			UserID:        v.UserID,
+			VotingID:      v.VotingID,
+			CreatedOn:     timestamppb.New(v.CreatedOn),
+			VotingTitle:   v.Title,
+			VotingAddress: v.Address,
+		}
+	}
+
+	return &pb.GetVotingsAvailableToUserResponse{VotingsAvailableToUser: pbVotingsAvailableToUser}, nil
+}

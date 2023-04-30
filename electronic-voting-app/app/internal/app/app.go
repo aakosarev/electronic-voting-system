@@ -13,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 	"net"
 	"net/http"
@@ -31,6 +32,11 @@ type App struct {
 func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 	router := httprouter.New()
 
+	votingManagerConn, err := grpc.Dial(fmt.Sprintf("%s:%d", config.VotingManagerGRPC.IP, config.VotingManagerGRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
 	pgConfig := postgresql.NewPgConfig(
 		config.PostgreSQL.Username, config.PostgreSQL.Password,
 		config.PostgreSQL.Host, config.PostgreSQL.Port, config.PostgreSQL.Database,
@@ -43,7 +49,7 @@ func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 
 	userStorage := storage.NewUserStorage(pgClient)
 
-	votingAppHTTPHandler := myhttp.NewHandler(userStorage)
+	votingAppHTTPHandler := myhttp.NewHandler(userStorage, votingManagerConn)
 	votingAppHTTPHandler.Register(router)
 
 	votingAppGRPCHandler := mygrpc.NewHandler(
@@ -105,15 +111,4 @@ func (a *App) Run(ctx context.Context) error {
 		return a.startGRPC()
 	})
 	return grp.Wait()
-
-	/*err := a.startHTTP()
-	if err != nil {
-		return err
-	}
-
-	err = a.startGRPC()
-	if err != nil {
-		return err
-	}
-	return nil*/
 }

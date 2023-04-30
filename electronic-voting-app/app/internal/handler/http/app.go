@@ -3,23 +3,27 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/model"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/storage"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
+	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
 type Handler struct {
-	userStorage *storage.UserStorage
+	votingManagerClient pbvm.VotingManagerClient
+	userStorage         *storage.UserStorage
 }
 
-func NewHandler(userStorage *storage.UserStorage) *Handler {
+func NewHandler(userStorage *storage.UserStorage, connVotingManager *grpc.ClientConn) *Handler {
 	return &Handler{
-		userStorage: userStorage,
+		userStorage:         userStorage,
+		votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager),
 	}
 }
 
@@ -36,47 +40,21 @@ var sessions = map[string]session{}
 
 func (h *Handler) Register(router *httprouter.Router) {
 	router.HandlerFunc(http.MethodPost, "/login", h.Login)
-	router.HandlerFunc(http.MethodPost, "/initial_login", h.InitialLogin)
+	router.HandlerFunc(http.MethodPost, "/initial_login", AuthMiddleware(h.InitialLogin))
 	router.HandlerFunc(http.MethodGet, "/logout", h.Logout)
-	router.HandlerFunc(http.MethodPost, "/refresh", h.Refresh)
-	router.GET("/force_enter_details/:user_id", h.ForceEnterDetails)
+	router.HandlerFunc(http.MethodPost, "/refresh", AuthMiddleware(h.Refresh))
+	router.HandlerFunc(http.MethodGet, "/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
+	router.HandlerFunc(http.MethodGet, "/available_votings", AuthMiddleware(h.AvailableVotings))
 }
 
-func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
+	userSession := sessions[sessionToken]
 
-	userSession, exists := sessions[sessionToken]
-	if !exists {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if userSession.isExpired() {
-		delete(sessions, sessionToken)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userIDstr := ps.ByName("user_id")
-
-	userID, err := strconv.Atoi(userIDstr)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	forceEnterDetails, err := h.userStorage.GetForceEnterDetailsByUsername(r.Context(), int32(userID))
+	forceEnterDetails, err := h.userStorage.GetForceEnterDetailsByUsername(r.Context(), userSession.username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -84,12 +62,9 @@ func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps h
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"force_enter_details": %t}`, forceEnterDetails)))
-
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var loginUser model.LoginUser
 	err := json.NewDecoder(r.Body).Decode(&loginUser)
 	if err != nil {
@@ -124,33 +99,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
-
-	userSession, exists := sessions[sessionToken]
-	if !exists {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if userSession.isExpired() {
-		delete(sessions, sessionToken)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	userSession := sessions[sessionToken]
 
 	var ilu model.InitialLoginUser
-	err = json.NewDecoder(r.Body).Decode(&ilu)
+	err := json.NewDecoder(r.Body).Decode(&ilu)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -190,8 +144,6 @@ func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -213,29 +165,9 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie("session_token")
-	if err != nil {
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
-
-	userSession, exists := sessions[sessionToken]
-	if !exists {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if userSession.isExpired() {
-		delete(sessions, sessionToken)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	userSession := sessions[sessionToken]
 
 	newSessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(1 * time.Hour)
@@ -252,4 +184,48 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		Value:   newSessionToken,
 		Expires: expiresAt,
 	})
+}
+
+func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
+	sessionToken := c.Value
+	userSession := sessions[sessionToken]
+
+	req := &pbvm.GetVotingsAvailableToUserRequest{
+		UserID: userSession.username,
+	}
+
+	resp, err := h.votingManagerClient.GetVotingsAvailableToUser(r.Context(), req)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	pbAvailableVotings := resp.GetVotingsAvailableToUser()
+
+	var availableVotings []*model.VotingAvailableToUser
+
+	for _, av := range pbAvailableVotings {
+		availableVotings = append(availableVotings, &model.VotingAvailableToUser{
+			UserID:     av.GetUserID(),
+			VotingID:   av.GetVotingID(),
+			CreatedOn:  av.GetCreatedOn().AsTime(),
+			Title:      av.GetVotingTitle(),
+			Address:    av.GetVotingAddress(),
+			Registered: false, //TODO to change!
+			Requested:  false, //TODO to change!
+		})
+	}
+
+	availableVotingsJson, err := json.Marshal(availableVotings)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(availableVotingsJson)
 }

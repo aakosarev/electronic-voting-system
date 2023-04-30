@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-verifier/v1";
+
+message GetPublicKeyForVotingIDRequest {
+  int32 votingID = 1;
+}
+
+message GetPublicKeyForVotingIDResponse {
+  bytes publicKeyBytes = 1;
+}
+
+service VotingVerifier {
+  rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
+}

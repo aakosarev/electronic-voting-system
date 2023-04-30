@@ -60,3 +60,11 @@ func (s *Service) AddRightToVote(ctx context.Context, userID, votingID int32) er
 	}
 	return nil
 }
+
+func (s *Service) GetVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error) {
+	votingsAvailableToUser, err := s.storage.FindVotingsAvailableToUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return votingsAvailableToUser, nil
+}

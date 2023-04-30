@@ -18,14 +18,6 @@ type Config struct {
 		Host     string `yaml:"host"`
 		Port     string `yaml:"port"`
 	} `yaml:"postgresql"`
-	HTTP struct {
-		IP   string `yaml:"ip"`
-		Port int    `yaml:"port"`
-	} `yaml:"http"`
-	VotingManagerGRPC struct {
-		IP   string `yaml:"ip"`
-		Port int    `yaml:"port"`
-	} `yaml:"voting-manager-grpc"`
 }
 
 var instance *Config
