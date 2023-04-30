@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VotingVerifierClient interface {
 	GetPublicKeyForVotingID(ctx context.Context, in *GetPublicKeyForVotingIDRequest, opts ...grpc.CallOption) (*GetPublicKeyForVotingIDResponse, error)
+	SignBlindedToken(ctx context.Context, in *SignBlindedTokenRequest, opts ...grpc.CallOption) (*SignBlindedTokenResponse, error)
 }
 
 type votingVerifierClient struct {
@@ -42,11 +43,21 @@ func (c *votingVerifierClient) GetPublicKeyForVotingID(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *votingVerifierClient) SignBlindedToken(ctx context.Context, in *SignBlindedTokenRequest, opts ...grpc.CallOption) (*SignBlindedTokenResponse, error) {
+	out := new(SignBlindedTokenResponse)
+	err := c.cc.Invoke(ctx, "/VotingVerifier/SignBlindedToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VotingVerifierServer is the server API for VotingVerifier service.
 // All implementations must embed UnimplementedVotingVerifierServer
 // for forward compatibility
 type VotingVerifierServer interface {
 	GetPublicKeyForVotingID(context.Context, *GetPublicKeyForVotingIDRequest) (*GetPublicKeyForVotingIDResponse, error)
+	SignBlindedToken(context.Context, *SignBlindedTokenRequest) (*SignBlindedTokenResponse, error)
 	mustEmbedUnimplementedVotingVerifierServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedVotingVerifierServer struct {
 
 func (UnimplementedVotingVerifierServer) GetPublicKeyForVotingID(context.Context, *GetPublicKeyForVotingIDRequest) (*GetPublicKeyForVotingIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPublicKeyForVotingID not implemented")
+}
+func (UnimplementedVotingVerifierServer) SignBlindedToken(context.Context, *SignBlindedTokenRequest) (*SignBlindedTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignBlindedToken not implemented")
 }
 func (UnimplementedVotingVerifierServer) mustEmbedUnimplementedVotingVerifierServer() {}
 
@@ -88,6 +102,24 @@ func _VotingVerifier_GetPublicKeyForVotingID_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VotingVerifier_SignBlindedToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignBlindedTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VotingVerifierServer).SignBlindedToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/VotingVerifier/SignBlindedToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VotingVerifierServer).SignBlindedToken(ctx, req.(*SignBlindedTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VotingVerifier_ServiceDesc is the grpc.ServiceDesc for VotingVerifier service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var VotingVerifier_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPublicKeyForVotingID",
 			Handler:    _VotingVerifier_GetPublicKeyForVotingID_Handler,
+		},
+		{
+			MethodName: "SignBlindedToken",
+			Handler:    _VotingVerifier_SignBlindedToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
