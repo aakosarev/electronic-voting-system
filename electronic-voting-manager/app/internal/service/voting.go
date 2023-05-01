@@ -68,3 +68,11 @@ func (s *Service) GetVotingsAvailableToUser(ctx context.Context, userID int32) (
 	}
 	return votingsAvailableToUser, nil
 }
+
+func (s *Service) GetVotingByID(ctx context.Context, votingID int32) (*model.Voting, error) {
+	voting, err := s.storage.FindVotingByID(ctx, votingID)
+	if err != nil {
+		return nil, err
+	}
+	return voting, nil
+}

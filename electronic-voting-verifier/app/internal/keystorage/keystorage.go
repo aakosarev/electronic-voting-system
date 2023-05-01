@@ -112,3 +112,23 @@ func (ks *KeyStorage) SignBlindedToken(blindedToken string, votingID int32) (str
 
 	return string(signedBlindedToken), nil
 }
+
+func (ks *KeyStorage) VerifySignature(signedToken, token string, votingID int32) (bool, error) {
+
+	publicKeyBytes, err := ks.GetPublicKeyBytesForVotingID(votingID)
+	if err != nil {
+		return false, err
+	}
+
+	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
+	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
+	if err != nil {
+		return false, err
+	}
+
+	if err = rsablind.VerifyBlindSignature(publicKey, []byte(token), []byte(signedToken)); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

@@ -173,7 +173,7 @@ func completeOptions(session *ContractSession, client *ethclient.Client, address
 	return nil
 }
 
-func GiveRightVote(session *ContractSession, client *ethclient.Client, cfg *config.Config, address common.Address, voterAddress common.Address) error {
+func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client, cfg *config.Config, address common.Address, voterAddress common.Address) error {
 	err := loadContract(session, client, address)
 	if err != nil {
 		return err

@@ -303,12 +303,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	signedToken := rsablind.Unblind(publicKey, []byte(signedBlindedToken), unblinder)
 
-	if err = rsablind.VerifyBlindSignature(publicKey, token, signedToken); err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
 	if err != nil {
 		log.Println(err)
@@ -325,5 +319,7 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = address //TODO delete
+	_ = signedToken // TODO delete
+	_ = address     // TODO delete
+
 }

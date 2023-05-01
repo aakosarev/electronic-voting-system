@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I=
 github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230430120839-e1e281e11fda h1:9z0G5TfGHRxQaszeG2/jXm/Wr595stGjx+zjFEgVedk=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230430120839-e1e281e11fda/go.mod h1:pFqvp6UBkV6naOfFkUbuMZ0hHMSSmeieItICpfKX0AA=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501133801-061fe92ab8a3 h1:N4Nny1S2D00MEOekDR0IHwVFHFFD1LfVt9lYEKFX/N4=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501133801-061fe92ab8a3/go.mod h1:pFqvp6UBkV6naOfFkUbuMZ0hHMSSmeieItICpfKX0AA=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/cockroachdb/cockroach-go/v2 v2.2.0 h1:/5znzg5n373N/3ESjHF5SMLxiW4RKB05Ql//KWfeTFs=
@@ -11,6 +11,8 @@ github.com/cockroachdb/cockroach-go/v2 v2.2.0/go.mod h1:u3MiKYGupPPjkn3ozknpMUpx
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
+github.com/cryptoballot/fdh v0.0.0-20170924224734-5eb31ce2010c h1:habgwvtC2G/hgK7TUV7sPmGe43OIqAr0aKUuD4X4D7s=
+github.com/cryptoballot/fdh v0.0.0-20170924224734-5eb31ce2010c/go.mod h1:5pBX/BVsUUknnixeKb1/q20aCjY7Ig5C3LcCrwTSWoU=
 github.com/cryptoballot/rsablind v0.0.0-20170925165423-14f9913880b7 h1:zkd3AG8n/WAUxTIy5DKd22U8oQGDpbaCsaRKewdxnxQ=
 github.com/cryptoballot/rsablind v0.0.0-20170925165423-14f9913880b7/go.mod h1:Jkrm3gC2eNL7k0K6wlLehI7CHiZVUCZ/cu5xT1aDNb4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

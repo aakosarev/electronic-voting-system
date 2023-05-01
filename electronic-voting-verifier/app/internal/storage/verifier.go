@@ -16,10 +16,11 @@ func NewStorage(client postgresql.Client) *Storage {
 	}
 }
 
-func (s *Storage) CheckExistsRegistrationRequest(ctx context.Context, userID, votingID int32) (bool, error) {
+func (s *Storage) CheckExistsBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32) (bool, error) {
 	query := `
-		SELECT EXISTS (SELECT * FROM registration_request WHERE user_id = $1 AND voting_id = $2);
+		SELECT EXISTS (SELECT * FROM blinded_token_signing_request WHERE user_id = $1 AND voting_id = $2);
 	`
+
 	var exists bool
 
 	err := pgxscan.Get(ctx, s.client, &exists, query, userID, votingID)
@@ -30,13 +31,42 @@ func (s *Storage) CheckExistsRegistrationRequest(ctx context.Context, userID, vo
 	return exists, nil
 }
 
-func (s *Storage) AddRegistrationRequest(ctx context.Context, userID, votingID int32, blindedTokenHash string) error {
+func (s *Storage) AddBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32, blindedTokenHash string) error {
 	query := `
-		INSERT INTO registration_request(user_id, voting_id, blinded_token_hash)
+		INSERT INTO blinded_token_signing_request(user_id, voting_id, blinded_token_hash)
 		VALUES ($1, $2, $3);
 	`
 
 	_, err := s.client.Exec(ctx, query, userID, votingID, blindedTokenHash)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) CheckExistsRegisterAddressToVotingRequest(ctx context.Context, votingID int32, address string) (bool, error) {
+	query := `
+		SELECT EXISTS (SELECT * FROM register_address_to_voting_by_signed_token_request WHERE voting_id = $1 AND address = $2);
+	`
+
+	var exists bool
+
+	err := pgxscan.Get(ctx, s.client, &exists, query, votingID, address)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (s *Storage) AddRegisterAddressToVotingRequest(ctx context.Context, address string, votingID int32, signedTokenHash string) error {
+	query := `
+		INSERT INTO register_address_to_voting_by_signed_token_request(address, voting_id, signed_token_hash)
+		VALUES ($1, $2, $3);
+	`
+
+	_, err := s.client.Exec(ctx, query, address, votingID, signedTokenHash)
 	if err != nil {
 		return err
 	}

@@ -44,9 +44,15 @@ message GetVotingsAvailableToUserResponse{
   repeated VotingAvailableToUser votingsAvailableToUser = 1;
 }
 
+message RegisterAddressToVotingRequest {
+  int32 votingID = 1;
+  string address = 2;
+}
+
 service VotingManager {
   rpc CreateVoting(CreateVotingRequest) returns (google.protobuf.Empty);
   rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
   rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
   rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserRequest) returns (GetVotingsAvailableToUserResponse);
+  rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
 }
