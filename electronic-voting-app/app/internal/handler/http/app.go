@@ -1,29 +1,38 @@
 package http
 
 import (
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
+	pbvv "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-verifier/v1"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/eth"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/model"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/storage"
+	"github.com/cryptoballot/rsablind"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 type Handler struct {
-	votingManagerClient pbvm.VotingManagerClient
-	userStorage         *storage.UserStorage
+	votingManagerClient  pbvm.VotingManagerClient
+	votingVerifierClient pbvv.VotingVerifierClient
+	userStorage          *storage.UserStorage
 }
 
-func NewHandler(userStorage *storage.UserStorage, connVotingManager *grpc.ClientConn) *Handler {
+func NewHandler(userStorage *storage.UserStorage, connVotingManager, connVotingVerifier *grpc.ClientConn) *Handler {
 	return &Handler{
-		userStorage:         userStorage,
-		votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager),
+		userStorage:          userStorage,
+		votingManagerClient:  pbvm.NewVotingManagerClient(connVotingManager),
+		votingVerifierClient: pbvv.NewVotingVerifierClient(connVotingVerifier),
 	}
 }
 
@@ -45,6 +54,7 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.HandlerFunc(http.MethodPost, "/refresh", AuthMiddleware(h.Refresh))
 	router.HandlerFunc(http.MethodGet, "/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
 	router.HandlerFunc(http.MethodGet, "/available_votings", AuthMiddleware(h.AvailableVotings))
+	router.HandlerFunc(http.MethodPost, "/register_to_voting", AuthMiddleware(h.RegisterToVoting))
 }
 
 func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request) {
@@ -228,4 +238,92 @@ func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(availableVotingsJson)
+}
+
+func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
+	sessionToken := c.Value
+	userSession := sessions[sessionToken]
+
+	var votingID int32
+	err := json.NewDecoder(r.Body).Decode(&votingID)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	reqGetPublicKeyBytes := &pbvv.GetPublicKeyForVotingIDRequest{VotingID: votingID}
+
+	respGetPublicKeyBytes, err := h.votingVerifierClient.GetPublicKeyForVotingID(r.Context(), reqGetPublicKeyBytes)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	publicKeyBytes := respGetPublicKeyBytes.GetPublicKeyBytes()
+
+	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
+	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	token := make([]byte, 16)
+	_, err = rand.Read(token)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	blindedToken, unblinder, err := rsablind.Blind(publicKey, token)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	reqSignBlindedToken := &pbvv.SignBlindedTokenRequest{
+		UserID:       userSession.username,
+		VotingID:     votingID,
+		BlindedToken: string(blindedToken),
+	}
+
+	respSignBlindedToken, err := h.votingVerifierClient.SignBlindedToken(r.Context(), reqSignBlindedToken)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	signedBlindedToken := respSignBlindedToken.GetSignedBlindedToken()
+
+	signedToken := rsablind.Unblind(publicKey, []byte(signedBlindedToken), unblinder)
+
+	if err = rsablind.VerifyBlindSignature(publicKey, token, signedToken); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	wd, _ := os.Getwd()
+	keyStorePath := fmt.Sprintf("%s/internal/keystorage", wd)
+	address, err := eth.GenerateNewAccount(keyStorePath, passwordHash) //TODO md use pass (not passHash)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_ = address //TODO delete
 }

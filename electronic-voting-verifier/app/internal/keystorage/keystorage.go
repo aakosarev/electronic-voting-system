@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/cryptoballot/rsablind"
 	"os"
 	"strconv"
 )
@@ -79,7 +80,7 @@ func (ks *KeyStorage) GetPublicKeyBytesForVotingID(votingID int32) ([]byte, erro
 	return publicKeyBytes, nil
 }
 
-func (ks *KeyStorage) GetPrivateKeyBytesForVotingID(votingID int32) ([]byte, error) {
+func (ks *KeyStorage) getPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey, error) {
 	wd, _ := os.Getwd()
 	filenamePrivateKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_private.pem", wd, strconv.Itoa(int(votingID)))
 
@@ -88,5 +89,26 @@ func (ks *KeyStorage) GetPrivateKeyBytesForVotingID(votingID int32) ([]byte, err
 		return nil, err
 	}
 
-	return privateKeyBytes, nil
+	privateKeyPEM, _ := pem.Decode(privateKeyBytes)
+
+	privateKey, err := x509.ParsePKCS1PrivateKey(privateKeyPEM.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKey, nil
+}
+
+func (ks *KeyStorage) SignBlindedToken(blindedToken string, votingID int32) (string, error) {
+	privateKey, err := ks.getPrivateKeyForVotingID(votingID)
+	if err != nil {
+		return "", err
+	}
+
+	signedBlindedToken, err := rsablind.BlindSign(privateKey, []byte(blindedToken))
+	if err != nil {
+		return "", err
+	}
+
+	return string(signedBlindedToken), nil
 }

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package = "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-verifier/v1";
 
+import "google/protobuf/empty.proto";
+
 message GetPublicKeyForVotingIDRequest {
   int32 votingID = 1;
 }
@@ -20,7 +22,15 @@ message SignBlindedTokenResponse {
     string signedBlindedToken = 1;
 }
 
+message RegisterAddressToVotingRequest {
+  int32 votingID = 1;
+  string token = 2;
+  string signedToken = 3;
+  string address = 4;
+}
+
 service VotingVerifier {
   rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
   rpc SignBlindedToken(SignBlindedTokenRequest) returns (SignBlindedTokenResponse);
+  rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
 }
