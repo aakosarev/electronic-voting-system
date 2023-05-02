@@ -99,21 +99,21 @@ func (ks *KeyStorage) getPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey,
 	return privateKey, nil
 }
 
-func (ks *KeyStorage) SignBlindedToken(blindedToken string, votingID int32) (string, error) {
+func (ks *KeyStorage) SignBlindedToken(blindedToken []byte, votingID int32) ([]byte, error) {
 	privateKey, err := ks.getPrivateKeyForVotingID(votingID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	signedBlindedToken, err := rsablind.BlindSign(privateKey, []byte(blindedToken))
+	signedBlindedToken, err := rsablind.BlindSign(privateKey, blindedToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(signedBlindedToken), nil
+	return signedBlindedToken, nil
 }
 
-func (ks *KeyStorage) VerifySignature(signedToken, token string, votingID int32) (bool, error) {
+func (ks *KeyStorage) VerifySignature(signedToken, token []byte, votingID int32) (bool, error) {
 
 	publicKeyBytes, err := ks.GetPublicKeyBytesForVotingID(votingID)
 	if err != nil {
@@ -126,7 +126,7 @@ func (ks *KeyStorage) VerifySignature(signedToken, token string, votingID int32)
 		return false, err
 	}
 
-	if err = rsablind.VerifyBlindSignature(publicKey, []byte(token), []byte(signedToken)); err != nil {
+	if err = rsablind.VerifyBlindSignature(publicKey, token, signedToken); err != nil {
 		return false, err
 	}
 

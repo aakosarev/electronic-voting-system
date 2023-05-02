@@ -3,7 +3,6 @@ package http
 import (
 	"crypto/rand"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -282,10 +281,9 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqSignBlindedToken := &pbvv.SignBlindedTokenRequest{
-		UserID:   userSession.username,
-		VotingID: registerToVotingReq.VotingID,
-		//BlindedToken: string(blindedToken),
-		BlindedToken: hex.EncodeToString(blindedToken),
+		UserID:       userSession.username,
+		VotingID:     registerToVotingReq.VotingID,
+		BlindedToken: blindedToken,
 	}
 
 	respSignBlindedToken, err := h.votingVerifierClient.SignBlindedToken(r.Context(), reqSignBlindedToken)
@@ -320,7 +318,7 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	reqToVotingVerifier := &pbvv.RegisterAddressToVotingBySignedTokenRequest{
 		VotingID:    registerToVotingReq.VotingID,
 		Token:       string(token),
-		SignedToken: string(signedToken),
+		SignedToken: signedToken,
 		Address:     address,
 	}
 

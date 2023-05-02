@@ -79,7 +79,7 @@ func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTok
 		return nil, errors.New("1123123")
 	}
 
-	blindedTokenHash := sha256.Sum256([]byte(req.GetBlindedToken()))
+	blindedTokenHash := sha256.Sum256(req.GetBlindedToken())
 
 	err = h.storage.AddBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID(), string(blindedTokenHash[:]))
 	if err != nil {

@@ -24,7 +24,7 @@ message SignBlindedTokenResponse {
 
 message RegisterAddressToVotingBySignedTokenRequest {
   int32 votingID = 1;
-  string token = 2;
+  bytes token = 2;
   bytes signedToken = 3;
   string address = 4;
 }
