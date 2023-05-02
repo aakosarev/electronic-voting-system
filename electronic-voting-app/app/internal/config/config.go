@@ -26,6 +26,10 @@ type Config struct {
 		IP   string `yaml:"ip"`
 		Port int    `yaml:"port"`
 	} `yaml:"voting-manager-grpc"`
+	VotingVerifierGRPC struct {
+		IP   string `yaml:"ip"`
+		Port int    `yaml:"port"`
+	} `yaml:"voting-verifier-grpc"`
 }
 
 var instance *Config

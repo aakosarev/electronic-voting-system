@@ -319,7 +319,19 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = signedToken // TODO delete
-	_ = address     // TODO delete
+	reqToVotingVerifier := &pbvv.RegisterAddressToVotingRequest{
+		VotingID:    votingID,
+		Token:       string(token),
+		SignedToken: string(signedToken),
+		Address:     address,
+	}
 
+	_, err = h.votingVerifierClient.RegisterAddressToVoting(r.Context(), reqToVotingVerifier)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

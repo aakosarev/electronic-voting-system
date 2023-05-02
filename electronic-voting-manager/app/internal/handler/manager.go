@@ -76,3 +76,13 @@ func (h *Handler) GetVotingsAvailableToUser(ctx context.Context, req *pb.GetVoti
 
 	return &pb.GetVotingsAvailableToUserResponse{VotingsAvailableToUser: pbVotingsAvailableToUser}, nil
 }
+
+func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pb.RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
+
+	err := h.service.RegisterAddressToVoting(ctx, req.GetVotingID(), req.GetAddress())
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}

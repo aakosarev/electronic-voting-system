@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I=
 github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501133801-061fe92ab8a3 h1:N4Nny1S2D00MEOekDR0IHwVFHFFD1LfVt9lYEKFX/N4=
-github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501133801-061fe92ab8a3/go.mod h1:pFqvp6UBkV6naOfFkUbuMZ0hHMSSmeieItICpfKX0AA=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501184750-cd6519f4b23e h1:zSmFN4X1ExkzynTpjs/12mlkUIgPZxwSdgRs+7RDj54=
+github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230501184750-cd6519f4b23e/go.mod h1:pFqvp6UBkV6naOfFkUbuMZ0hHMSSmeieItICpfKX0AA=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
 github.com/cockroachdb/apd v1.1.0/go.mod h1:8Sl8LxpKi29FqWXR16WEFZRNSz3SoPzUzeMeY4+DwBQ=
 github.com/cockroachdb/cockroach-go/v2 v2.2.0 h1:/5znzg5n373N/3ESjHF5SMLxiW4RKB05Ql//KWfeTFs=

@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/eth/voting"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/model"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"time"
 )
@@ -69,10 +71,17 @@ func (s *Service) GetVotingsAvailableToUser(ctx context.Context, userID int32) (
 	return votingsAvailableToUser, nil
 }
 
-func (s *Service) GetVotingByID(ctx context.Context, votingID int32) (*model.Voting, error) {
-	voting, err := s.storage.FindVotingByID(ctx, votingID)
+func (s *Service) RegisterAddressToVoting(ctx context.Context, votingID int32, address string) error {
+	v, err := s.storage.FindVotingByID(ctx, votingID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return voting, nil
+
+	cfg := config.GetConfig() // TODO refactor
+	err = voting.RegisterAddressToVoting(s.contractSession, s.ethclient, cfg, common.HexToAddress(v.Address), common.HexToAddress(address))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

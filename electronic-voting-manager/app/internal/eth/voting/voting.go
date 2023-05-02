@@ -210,8 +210,6 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 
 	tx = types.NewTransaction(nonce, voterAddress, value, session.TransactOpts.GasLimit, session.TransactOpts.GasPrice, nil)
 
-	//fmt.Println(tx.Hash().Hex())
-
 	privateKey, err := crypto.HexToECDSA(cfg.Blockchain.PrivateKey)
 	if err != nil {
 		return fmt.Errorf("failed conversion hex private key to ecdsa: %w", err)
@@ -221,8 +219,6 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 	if err != nil {
 		return fmt.Errorf("failed transaction signing: %w", err)
 	}
-
-	//fmt.Println(signedTx.Hash().Hex())
 
 	err = client.SendTransaction(context.Background(), signedTx)
 	if err != nil {

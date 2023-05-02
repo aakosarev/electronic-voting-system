@@ -37,6 +37,11 @@ func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 		return nil, err
 	}
 
+	votingVerifierConn, err := grpc.Dial(fmt.Sprintf("%s:%d", config.VotingVerifierGRPC.IP, config.VotingVerifierGRPC.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+
 	pgConfig := postgresql.NewPgConfig(
 		config.PostgreSQL.Username, config.PostgreSQL.Password,
 		config.PostgreSQL.Host, config.PostgreSQL.Port, config.PostgreSQL.Database,
@@ -49,7 +54,7 @@ func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 
 	userStorage := storage.NewUserStorage(pgClient)
 
-	votingAppHTTPHandler := myhttp.NewHandler(userStorage, votingManagerConn)
+	votingAppHTTPHandler := myhttp.NewHandler(userStorage, votingManagerConn, votingVerifierConn)
 	votingAppHTTPHandler.Register(router)
 
 	votingAppGRPCHandler := mygrpc.NewHandler(
@@ -91,7 +96,7 @@ func (a *App) startHTTP() error {
 
 	a.httpServer = &http.Server{
 		Handler:      a.router,
-		WriteTimeout: 30 * time.Second, //TODO get in cfg
+		WriteTimeout: 30 * time.Second,
 		ReadTimeout:  30 * time.Second,
 	}
 

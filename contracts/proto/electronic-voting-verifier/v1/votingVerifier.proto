@@ -22,7 +22,7 @@ message SignBlindedTokenResponse {
     string signedBlindedToken = 1;
 }
 
-message RegisterAddressToVotingRequest {
+message RegisterAddressToVotingBySignedTokenRequest {
   int32 votingID = 1;
   string token = 2;
   string signedToken = 3;
@@ -32,5 +32,5 @@ message RegisterAddressToVotingRequest {
 service VotingVerifier {
   rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
   rpc SignBlindedToken(SignBlindedTokenRequest) returns (SignBlindedTokenResponse);
-  rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
+  rpc RegisterAddressToVotingBySignedToken(RegisterAddressToVotingBySignedTokenRequest) returns (google.protobuf.Empty);
 }

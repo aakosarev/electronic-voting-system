@@ -108,7 +108,15 @@ func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.Registe
 		return nil, errors.New("such an address registration request already exists")
 	}
 
-	//TODO here req to voting manager (
+	reqToVotingManager := &pbvm.RegisterAddressToVotingRequest{
+		VotingID: req.GetVotingID(),
+		Address:  req.GetAddress(),
+	}
+
+	_, err = h.votingManagerClient.RegisterAddressToVoting(ctx, reqToVotingManager)
+	if err != nil {
+		return nil, err
+	}
 
 	signedTokenHash := sha256.Sum256([]byte(req.GetSignedToken()))
 
