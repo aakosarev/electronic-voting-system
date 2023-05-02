@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -55,6 +56,7 @@ func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.votingManagerClient.CreateVoting(r.Context(), req)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

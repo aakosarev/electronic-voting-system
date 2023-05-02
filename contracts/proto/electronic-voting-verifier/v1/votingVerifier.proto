@@ -15,17 +15,17 @@ message GetPublicKeyForVotingIDResponse {
 message SignBlindedTokenRequest {
   int32 userID = 1;
   int32 votingID = 2;
-  string blindedToken = 3;
+  bytes blindedToken = 3;
 }
 
 message SignBlindedTokenResponse {
-    string signedBlindedToken = 1;
+    bytes signedBlindedToken = 1;
 }
 
 message RegisterAddressToVotingBySignedTokenRequest {
   int32 votingID = 1;
   string token = 2;
-  string signedToken = 3;
+  bytes signedToken = 3;
   string address = 4;
 }
 

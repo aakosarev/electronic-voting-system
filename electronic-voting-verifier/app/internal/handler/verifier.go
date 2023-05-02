@@ -75,7 +75,8 @@ func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTok
 
 	signedBlindedToken, err := h.keystorage.SignBlindedToken(req.GetBlindedToken(), req.GetVotingID())
 	if err != nil {
-		return nil, err
+		//return nil, err
+		return nil, errors.New("1123123")
 	}
 
 	blindedTokenHash := sha256.Sum256([]byte(req.GetBlindedToken()))
@@ -88,7 +89,7 @@ func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTok
 	return &pbvv.SignBlindedTokenResponse{SignedBlindedToken: signedBlindedToken}, nil
 }
 
-func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
+func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
 
 	ok, err := h.keystorage.VerifySignature(req.GetSignedToken(), req.GetToken(), req.GetVotingID())
 	if err != nil {

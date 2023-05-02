@@ -1,6 +1,6 @@
 blockchain:
-  url:
-  private_key:
+  url: http://127.0.0.1:8545
+  private_key: a72eb9f0e58655f7d6726fdfd16b9d36fc840f4323e204d856f5ab52154b8b64
   gas_limit: 10000000
   gas_price: 2000000000
   default_wei_founds: 0

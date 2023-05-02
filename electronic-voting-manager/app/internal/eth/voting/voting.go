@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"log"
 	"math/big"
 	"time"
 )
@@ -58,7 +57,6 @@ func NewSession(ctx context.Context, client *ethclient.Client, cfg *config.Confi
 
 func createContract(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time) (string, error) {
 	contractAddress, tx, instance, err := DeployContract(&session.TransactOpts, client, votingTitle, big.NewInt(votingEndTime.Unix()))
-	log.Println(contractAddress.Hex(), tx.Hash().Hex())
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy the contract: %w", err)
 	}
@@ -71,7 +69,6 @@ func createContract(session *ContractSession, client *ethclient.Client, votingTi
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return "", fmt.Errorf("deploy transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
-			fmt.Println(receipt.ContractAddress.Hex())
 			breakLoop = true
 		}
 	}
@@ -119,7 +116,12 @@ func addVotingOptions(session *ContractSession, client *ethclient.Client, addres
 
 	var votingOptionsTransactionHashes []common.Hash
 	for _, vo := range votingOptions {
-		tx, _ := session.AddVotingOption(vo)
+		tx, err := session.AddVotingOption(vo)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		fmt.Println(tx.Hash())
 		votingOptionsTransactionHashes = append(votingOptionsTransactionHashes, tx.Hash())
 	}
 

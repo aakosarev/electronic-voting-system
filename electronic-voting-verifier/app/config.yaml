@@ -7,7 +7,7 @@ postgresql:
   password: postgres
   database: voting-verifier
   host: localhost
-  port:
+  port: 5434
 
 voting-manager-grpc:
   ip: 0.0.0.0
