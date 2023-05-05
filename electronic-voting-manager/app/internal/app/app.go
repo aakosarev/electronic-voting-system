@@ -7,7 +7,6 @@ import (
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/eth/voting"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/handler"
-	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/service"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/storage"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/pkg/client/postgresql"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -49,10 +48,11 @@ func NewApp(ctx context.Context, config *config.Config) (*App, error) {
 	}
 
 	votingStorage := storage.NewStorage(pgClient)
-	votingService := service.NewService(votingStorage, session, eclient)
 
 	votingManagerHandler := handler.NewHandler(
-		votingService,
+		votingStorage,
+		session,
+		eclient,
 		pb.UnimplementedVotingManagerServer{},
 	)
 

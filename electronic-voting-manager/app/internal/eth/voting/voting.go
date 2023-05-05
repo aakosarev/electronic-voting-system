@@ -78,11 +78,10 @@ func createContract(session *ContractSession, client *ethclient.Client, votingTi
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return "", fmt.Errorf("deploy transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
+			log.Printf("the contract deployment transaction with hash [ %s ] has been mined\n", tx.Hash().Hex())
 			breakLoop = true
 		}
 	}
-
-	log.Printf("the contract deployment transaction with hash %s has been mined\n", tx.Hash().Hex())
 
 	session.Contract = instance
 
@@ -156,7 +155,7 @@ func addVotingOptions(session *ContractSession, client *ethclient.Client, addres
 				allProcessed = false
 				break
 			} else {
-				log.Printf("the option addition transaction with hash %s has been mined\n", trHash.Hex())
+				log.Printf("the option addition transaction with hash [ %s ] has been mined\n", trHash.Hex())
 			}
 		}
 
@@ -197,7 +196,7 @@ func completeOptions(session *ContractSession, client *ethclient.Client, address
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return fmt.Errorf("complete transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
-			log.Printf("the options completion transaction with hash %s has been mined\n", tx.Hash().Hex())
+			log.Printf("the options completion transaction with hash [ %s ] has been mined\n", tx.Hash().Hex())
 			breakLoop = true
 		}
 	}
@@ -231,7 +230,7 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return fmt.Errorf("giving right to vote transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
-			log.Printf("the transaction of registering an address to voting with hash %s has been mined\n", tx.Hash().Hex())
+			log.Printf("the transaction of registering an address to voting with hash [ %s ] has been mined\n", tx.Hash().Hex())
 			breakLoop = true
 		}
 	}
@@ -265,7 +264,17 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		return fmt.Errorf("failed send trans: %w", err)
 	}
 
-	//TODO WaitMined
+	waitUntil = time.Now().Add(timeout)
+	breakLoop = false
+	for !breakLoop {
+		receipt, _ := client.TransactionReceipt(context.Background(), signedTx.Hash())
+		if waitUntil.Sub(time.Now()) <= 0 {
+			return fmt.Errorf("ether transfer transaction %s not mined, timing out after %v minutes", signedTx.Hash().Hex(), timeout)
+		} else if receipt != nil {
+			log.Printf("the ether transfer transaction with hash [ %s ] has been mined\n", signedTx.Hash().Hex())
+			breakLoop = true
+		}
+	}
 
 	return nil
 }

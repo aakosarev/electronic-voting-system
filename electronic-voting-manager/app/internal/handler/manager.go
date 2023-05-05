@@ -3,33 +3,48 @@ package handler
 import (
 	"context"
 	pb "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
-	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/service"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/eth/voting"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/storage"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Handler struct {
-	service *service.Service
+	storage         *storage.Storage
+	contractSession *voting.ContractSession
+	ethclient       *ethclient.Client
 	pb.UnimplementedVotingManagerServer
 }
 
-func NewHandler(service *service.Service, srv pb.UnimplementedVotingManagerServer) *Handler {
+func NewHandler(storage *storage.Storage, contractSession *voting.ContractSession,
+	ethclient *ethclient.Client, srv pb.UnimplementedVotingManagerServer) *Handler {
 	return &Handler{
-		service:                          service,
+		storage:                          storage,
+		contractSession:                  contractSession,
+		ethclient:                        ethclient,
 		UnimplementedVotingManagerServer: srv,
 	}
 }
 
 func (h *Handler) CreateVoting(ctx context.Context, req *pb.CreateVotingRequest) (*emptypb.Empty, error) {
-	err := h.service.CreateVoting(ctx, req.GetVotingTitle(), req.GetVotingOptions(), req.GetEndTime().AsTime())
+	address, err := voting.CreateVoting(h.contractSession, h.ethclient, req.GetVotingTitle(), req.GetEndTime().AsTime(), req.GetVotingOptions())
 	if err != nil {
 		return nil, err
 	}
+
+	err = h.storage.AddVoting(ctx, req.GetVotingTitle(), req.GetEndTime().AsTime().Unix(), address)
+	if err != nil {
+		return nil, err
+	}
+
 	return &emptypb.Empty{}, nil
 }
 
 func (h *Handler) GetAllVotings(ctx context.Context, _ *emptypb.Empty) (*pb.GetAllVotingsResponse, error) {
-	votings, err := h.service.GetAllVotings(ctx)
+	votings, err := h.storage.FindVotings(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +64,7 @@ func (h *Handler) GetAllVotings(ctx context.Context, _ *emptypb.Empty) (*pb.GetA
 }
 
 func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequest) (*emptypb.Empty, error) {
-	err := h.service.AddRightToVote(ctx, req.GetUserID(), req.GetVotingID())
+	err := h.storage.AddRightToVote(ctx, req.GetUserID(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +73,7 @@ func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequ
 }
 
 func (h *Handler) GetVotingsAvailableToUser(ctx context.Context, req *pb.GetVotingsAvailableToUserRequest) (*pb.GetVotingsAvailableToUserResponse, error) {
-	votingsAvailableToUser, err := h.service.GetVotingsAvailableToUser(ctx, req.GetUserID())
+	votingsAvailableToUser, err := h.storage.FindVotingsAvailableToUser(ctx, req.GetUserID())
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +93,13 @@ func (h *Handler) GetVotingsAvailableToUser(ctx context.Context, req *pb.GetVoti
 }
 
 func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pb.RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
+	v, err := h.storage.FindVotingByID(ctx, req.GetVotingID())
+	if err != nil {
+		return nil, err
+	}
 
-	err := h.service.RegisterAddressToVoting(ctx, req.GetVotingID(), req.GetAddress())
+	cfg := config.GetConfig()
+	err = voting.RegisterAddressToVoting(h.contractSession, h.ethclient, cfg, common.HexToAddress(v.Address), common.HexToAddress(req.GetAddress()))
 	if err != nil {
 		return nil, err
 	}
