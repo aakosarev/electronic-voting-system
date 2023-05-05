@@ -1,8 +1,8 @@
 blockchain:
-  url: http://127.0.0.1:8545
-  private_key: a72eb9f0e58655f7d6726fdfd16b9d36fc840f4323e204d856f5ab52154b8b64
+  url: https://sepolia.infura.io/v3/4acf1231e76946a59e2f3c2cfc8ce3db
+  private_key: 395830046eff7441b17791163c7690f457dbe2ea7b4d46ca33dc50b60f6725e3
   gas_limit: 10000000
-  gas_price: 2000000000
+  gas_price: 4000000000
   default_wei_founds: 0
 
 grpc:

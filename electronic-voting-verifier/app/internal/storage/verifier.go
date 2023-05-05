@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-verifier/pkg/client/postgresql"
-	"github.com/georgysavva/scany/pgxscan"
 )
 
 type Storage struct {
@@ -16,19 +15,19 @@ func NewStorage(client postgresql.Client) *Storage {
 	}
 }
 
-func (s *Storage) CheckExistsBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32) (bool, error) {
+func (s *Storage) CheckExistsBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32) (int, error) {
 	query := `
-		SELECT EXISTS (SELECT * FROM blinded_token_signing_request WHERE user_id = $1 AND voting_id = $2);
+		SELECT COUNT(*) FROM blinded_token_signing_request WHERE user_id = $1 AND voting_id = $2;
 	`
 
-	var exists bool
+	var count int
 
-	err := pgxscan.Get(ctx, s.client, &exists, query, userID, votingID)
-	if err != nil {
-		return false, err
+	row := s.client.QueryRow(ctx, query, userID, votingID)
+	if err := row.Scan(&count); err != nil {
+		return -1, err
 	}
 
-	return exists, nil
+	return count, nil
 }
 
 func (s *Storage) AddBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32, blindedTokenHash string) error {
@@ -45,19 +44,19 @@ func (s *Storage) AddBlindedTokenSigningRequest(ctx context.Context, userID, vot
 	return nil
 }
 
-func (s *Storage) CheckExistsRegisterAddressToVotingRequest(ctx context.Context, votingID int32, address string) (bool, error) {
+func (s *Storage) CheckExistsRegisterAddressToVotingRequest(ctx context.Context, votingID int32, address string) (int, error) {
 	query := `
-		SELECT EXISTS (SELECT * FROM register_address_to_voting_by_signed_token_request WHERE voting_id = $1 AND address = $2);
+		SELECT COUNT(*) FROM register_address_to_voting_by_signed_token_request WHERE voting_id = $1 AND address = $2;
 	`
 
-	var exists bool
+	var count int
 
-	err := pgxscan.Get(ctx, s.client, &exists, query, votingID, address)
-	if err != nil {
-		return false, err
+	row := s.client.QueryRow(ctx, query, votingID, address)
+	if err := row.Scan(&count); err != nil {
+		return -1, err
 	}
 
-	return exists, nil
+	return count, nil
 }
 
 func (s *Storage) AddRegisterAddressToVotingRequest(ctx context.Context, address string, votingID int32, signedTokenHash string) error {

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS register_address_to_voting_by_signed_token_request (
     address VARCHAR(42) NOT NULL,
     voting_id INTEGER NOT NULL,
     signed_token_hash TEXT UNIQUE NOT NULL,
+    created_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (voting_id, address)
 );
 -- +goose StatementEnd

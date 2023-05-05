@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	pb "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/service"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -24,7 +23,6 @@ func NewHandler(service *service.Service, srv pb.UnimplementedVotingManagerServe
 func (h *Handler) CreateVoting(ctx context.Context, req *pb.CreateVotingRequest) (*emptypb.Empty, error) {
 	err := h.service.CreateVoting(ctx, req.GetVotingTitle(), req.GetVotingOptions(), req.GetEndTime().AsTime())
 	if err != nil {
-		fmt.Println("[CreateVoting] manager err")
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil

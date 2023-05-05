@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"log"
 	"math/big"
 	"time"
 )
@@ -56,12 +57,20 @@ func NewSession(ctx context.Context, client *ethclient.Client, cfg *config.Confi
 }
 
 func createContract(session *ContractSession, client *ethclient.Client, votingTitle string, votingEndTime time.Time) (string, error) {
+	time.Sleep(2 * time.Second)
+	nonce, err := client.PendingNonceAt(context.Background(), session.TransactOpts.From)
+	if err != nil {
+		return "", err
+	}
+
+	session.TransactOpts.Nonce = big.NewInt(int64(nonce))
+
 	contractAddress, tx, instance, err := DeployContract(&session.TransactOpts, client, votingTitle, big.NewInt(votingEndTime.Unix()))
 	if err != nil {
 		return "", fmt.Errorf("failed to deploy the contract: %w", err)
 	}
 
-	timeout := 3 * time.Minute
+	timeout := 2 * time.Minute
 	waitUntil := time.Now().Add(timeout)
 	breakLoop := false
 	for !breakLoop {
@@ -72,6 +81,8 @@ func createContract(session *ContractSession, client *ethclient.Client, votingTi
 			breakLoop = true
 		}
 	}
+
+	log.Printf("the contract deployment transaction with hash %s has been mined\n", tx.Hash().Hex())
 
 	session.Contract = instance
 
@@ -116,27 +127,37 @@ func addVotingOptions(session *ContractSession, client *ethclient.Client, addres
 
 	var votingOptionsTransactionHashes []common.Hash
 	for _, vo := range votingOptions {
-		tx, err := session.AddVotingOption(vo)
+		time.Sleep(2 * time.Second)
+		nonce, err := client.PendingNonceAt(context.Background(), session.TransactOpts.From)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return err
 		}
-		fmt.Println(tx.Hash())
+
+		session.TransactOpts.Nonce = big.NewInt(int64(nonce))
+
+		tx, err := session.AddVotingOption(vo)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
 		votingOptionsTransactionHashes = append(votingOptionsTransactionHashes, tx.Hash())
 	}
 
-	timeout := 3 * time.Minute
+	timeout := 2 * time.Minute
 	waitUntil := time.Now().Add(timeout)
 	breakLoop := false
 	for !breakLoop {
-		var processedTransactions []*types.Receipt
 		allProcessed := true
 		for _, trHash := range votingOptionsTransactionHashes {
 			receipt, _ := client.TransactionReceipt(context.Background(), trHash)
 			if receipt == nil {
 				allProcessed = false
+				break
+			} else {
+				log.Printf("the option addition transaction with hash %s has been mined\n", trHash.Hex())
 			}
-			processedTransactions = append(processedTransactions, receipt)
 		}
 
 		if waitUntil.Sub(time.Now()) <= 0 {
@@ -155,6 +176,14 @@ func completeOptions(session *ContractSession, client *ethclient.Client, address
 		return err
 	}
 
+	time.Sleep(2 * time.Second)
+	nonce, err := client.PendingNonceAt(context.Background(), session.TransactOpts.From)
+	if err != nil {
+		return err
+	}
+
+	session.TransactOpts.Nonce = big.NewInt(int64(nonce))
+
 	tx, err := session.CompleteVotingOptions()
 	if err != nil {
 		return fmt.Errorf("failed complition voting options: %w", err)
@@ -168,6 +197,7 @@ func completeOptions(session *ContractSession, client *ethclient.Client, address
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return fmt.Errorf("complete transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
+			log.Printf("the options completion transaction with hash %s has been mined\n", tx.Hash().Hex())
 			breakLoop = true
 		}
 	}
@@ -181,12 +211,19 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		return err
 	}
 
+	nonce, err := client.PendingNonceAt(context.Background(), session.TransactOpts.From)
+	if err != nil {
+		return err
+	}
+
+	session.TransactOpts.Nonce = big.NewInt(int64(nonce))
+
 	tx, err := session.GiveRightToVote(voterAddress)
 	if err != nil {
 		return fmt.Errorf("failed giving right to vote: %w", err)
 	}
 
-	timeout := 3 * time.Minute
+	timeout := 2 * time.Minute
 	waitUntil := time.Now().Add(timeout)
 	breakLoop := false
 	for !breakLoop {
@@ -194,6 +231,7 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		if waitUntil.Sub(time.Now()) <= 0 {
 			return fmt.Errorf("giving right to vote transaction %s not mined, timing out after %v minutes", tx.Hash().Hex(), timeout)
 		} else if receipt != nil {
+			log.Printf("the transaction of registering an address to voting with hash %s has been mined\n", tx.Hash().Hex())
 			breakLoop = true
 		}
 	}
@@ -203,7 +241,7 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		return fmt.Errorf("error chainID: %w", err)
 	}
 
-	nonce, err := client.PendingNonceAt(context.Background(), session.TransactOpts.From)
+	nonce, err = client.PendingNonceAt(context.Background(), session.TransactOpts.From)
 	if err != nil {
 		return fmt.Errorf("error pending nonce: %w", err)
 	}

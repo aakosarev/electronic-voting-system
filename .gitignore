@@ -1,2 +1,5 @@
 .idea/
 .DC_Store
+/electronic-voting-manager/app/config.yaml
+/electronic-voting-app/app/internal/keystorage/*
+/electronic-voting-verifier/app/internal/keystorage/keys/*

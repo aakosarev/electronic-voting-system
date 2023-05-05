@@ -40,14 +40,14 @@ func (s *Storage) FindVotingByID(ctx context.Context, votingID int32) (*model.Vo
 		WHERE id = $1;
 	`
 
-	var voting *model.Voting
+	var votings []*model.Voting
 
-	err := pgxscan.Get(ctx, s.client, &voting, query, votingID)
+	err := pgxscan.Select(ctx, s.client, &votings, query, votingID)
 	if err != nil {
 		return nil, err
 	}
 
-	return voting, nil
+	return votings[0], nil
 }
 
 func (s *Storage) AddRightToVote(ctx context.Context, userID, votingID int32) error {

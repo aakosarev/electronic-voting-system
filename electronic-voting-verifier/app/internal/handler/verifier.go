@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
@@ -64,24 +65,23 @@ func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTok
 		return nil, fmt.Errorf("the user %d does not have the right to vote in the voting %d", req.GetUserID(), req.GetVotingID())
 	}
 
-	requestAlreadyExists, err := h.storage.CheckExistsBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID())
+	countRequests, err := h.storage.CheckExistsBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
 
-	if requestAlreadyExists {
+	if countRequests > 0 {
 		return nil, errors.New("such a token signing request already exists")
 	}
 
 	signedBlindedToken, err := h.keystorage.SignBlindedToken(req.GetBlindedToken(), req.GetVotingID())
 	if err != nil {
-		//return nil, err
-		return nil, errors.New("1123123")
+		return nil, err
 	}
 
 	blindedTokenHash := sha256.Sum256(req.GetBlindedToken())
 
-	err = h.storage.AddBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID(), string(blindedTokenHash[:]))
+	err = h.storage.AddBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID(), hex.EncodeToString(blindedTokenHash[:]))
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTok
 	return &pbvv.SignBlindedTokenResponse{SignedBlindedToken: signedBlindedToken}, nil
 }
 
-func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
+func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
 
 	ok, err := h.keystorage.VerifySignature(req.GetSignedToken(), req.GetToken(), req.GetVotingID())
 	if err != nil {
@@ -100,12 +100,12 @@ func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.Registe
 		return nil, errors.New("signature not verified")
 	}
 
-	requestAlreadyExists, err := h.storage.CheckExistsRegisterAddressToVotingRequest(ctx, req.GetVotingID(), req.GetAddress())
+	countRequests, err := h.storage.CheckExistsRegisterAddressToVotingRequest(ctx, req.GetVotingID(), req.GetAddress())
 	if err != nil {
 		return nil, err
 	}
 
-	if requestAlreadyExists {
+	if countRequests > 0 {
 		return nil, errors.New("such an address registration request already exists")
 	}
 
@@ -121,7 +121,7 @@ func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pbvv.Registe
 
 	signedTokenHash := sha256.Sum256([]byte(req.GetSignedToken()))
 
-	err = h.storage.AddRegisterAddressToVotingRequest(ctx, req.GetAddress(), req.GetVotingID(), string(signedTokenHash[:]))
+	err = h.storage.AddRegisterAddressToVotingRequest(ctx, req.GetAddress(), req.GetVotingID(), hex.EncodeToString(signedTokenHash[:]))
 	if err != nil {
 		return nil, err
 	}

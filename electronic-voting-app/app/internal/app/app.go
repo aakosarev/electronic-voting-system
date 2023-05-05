@@ -96,8 +96,8 @@ func (a *App) startHTTP() error {
 
 	a.httpServer = &http.Server{
 		Handler:      a.router,
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 5 * time.Minute, // TODO in cfg
+		ReadTimeout:  5 * time.Minute,
 	}
 
 	if err = a.httpServer.Serve(listener); err != nil {
