@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/config"
+	"github.com/aakosarev/electronic-voting-system/electronic-voting-manager/internal/model"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -277,4 +278,37 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 	}
 
 	return nil
+}
+
+func GetInformationAboutVoting(session *ContractSession, client *ethclient.Client, address common.Address) (*model.InformationAboutVoting, error) {
+	err := loadContract(session, client, address)
+	if err != nil {
+		return nil, err
+	}
+
+	votingTitle, _ := session.GetVotingTitle()
+	numberRegisteredVotersBigInt, _ := session.GetNumberRegisteredVoters()
+	optionsCompleted, _ := session.GetOptionsCompleted()
+	endTimeBigInt, _ := session.GetVotingEndTime()
+	endTime := time.Unix(endTimeBigInt.Int64(), 0)
+	numberOptionsBigInt, _ := session.GetVotingOptionsLength()
+
+	options := make(map[int64]model.Option, numberOptionsBigInt.Int64())
+
+	for i := int64(0); i < numberOptionsBigInt.Int64(); i++ {
+		name, _ := session.GetNameVotingOption(big.NewInt(i))
+		numberVotes, _ := session.GetNumberVotesVotingOption(big.NewInt(i))
+		options[i] = model.Option{
+			Name:        name,
+			NumberVotes: numberVotes.Int64(),
+		}
+	}
+
+	return &model.InformationAboutVoting{
+		Title:                  votingTitle,
+		OptionsCompleted:       optionsCompleted,
+		NumberRegisteredVoters: numberRegisteredVotersBigInt.Int64(),
+		EndTime:                endTime,
+		Options:                options,
+	}, nil
 }

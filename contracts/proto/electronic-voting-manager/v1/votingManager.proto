@@ -49,10 +49,30 @@ message RegisterAddressToVotingRequest {
   string address = 2;
 }
 
+message GetInformationAboutBallotRequest {
+  int32 votingID = 1;
+}
+
+message Option {
+  string name = 1;
+  int64 numberVotes = 2;
+}
+
+message GetInformationAboutBallotResponse {
+  string title = 1;
+  bool optionsCompleted = 2;
+  int64 numberRegisteredVoters = 3;
+  google.protobuf.Timestamp endTime = 4;
+  map <int64, Option> options = 5;
+}
+
+
+
 service VotingManager {
   rpc CreateVoting(CreateVotingRequest) returns (google.protobuf.Empty);
   rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
   rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
   rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserRequest) returns (GetVotingsAvailableToUserResponse);
   rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
+  rpc GetInformationAboutBallot(GetInformationAboutBallotRequest) returns (GetInformationAboutBallotResponse);
 }

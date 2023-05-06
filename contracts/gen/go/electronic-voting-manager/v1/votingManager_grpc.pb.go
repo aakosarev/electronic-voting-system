@@ -28,6 +28,7 @@ type VotingManagerClient interface {
 	AddRightToVote(ctx context.Context, in *AddRightToVoteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetVotingsAvailableToUser(ctx context.Context, in *GetVotingsAvailableToUserRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserResponse, error)
 	RegisterAddressToVoting(ctx context.Context, in *RegisterAddressToVotingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetInformationAboutBallot(ctx context.Context, in *GetInformationAboutBallotRequest, opts ...grpc.CallOption) (*GetInformationAboutBallotResponse, error)
 }
 
 type votingManagerClient struct {
@@ -83,6 +84,15 @@ func (c *votingManagerClient) RegisterAddressToVoting(ctx context.Context, in *R
 	return out, nil
 }
 
+func (c *votingManagerClient) GetInformationAboutBallot(ctx context.Context, in *GetInformationAboutBallotRequest, opts ...grpc.CallOption) (*GetInformationAboutBallotResponse, error) {
+	out := new(GetInformationAboutBallotResponse)
+	err := c.cc.Invoke(ctx, "/VotingManager/GetInformationAboutBallot", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VotingManagerServer is the server API for VotingManager service.
 // All implementations must embed UnimplementedVotingManagerServer
 // for forward compatibility
@@ -92,6 +102,7 @@ type VotingManagerServer interface {
 	AddRightToVote(context.Context, *AddRightToVoteRequest) (*emptypb.Empty, error)
 	GetVotingsAvailableToUser(context.Context, *GetVotingsAvailableToUserRequest) (*GetVotingsAvailableToUserResponse, error)
 	RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error)
+	GetInformationAboutBallot(context.Context, *GetInformationAboutBallotRequest) (*GetInformationAboutBallotResponse, error)
 	mustEmbedUnimplementedVotingManagerServer()
 }
 
@@ -113,6 +124,9 @@ func (UnimplementedVotingManagerServer) GetVotingsAvailableToUser(context.Contex
 }
 func (UnimplementedVotingManagerServer) RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterAddressToVoting not implemented")
+}
+func (UnimplementedVotingManagerServer) GetInformationAboutBallot(context.Context, *GetInformationAboutBallotRequest) (*GetInformationAboutBallotResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInformationAboutBallot not implemented")
 }
 func (UnimplementedVotingManagerServer) mustEmbedUnimplementedVotingManagerServer() {}
 
@@ -217,6 +231,24 @@ func _VotingManager_RegisterAddressToVoting_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VotingManager_GetInformationAboutBallot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInformationAboutBallotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VotingManagerServer).GetInformationAboutBallot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/VotingManager/GetInformationAboutBallot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VotingManagerServer).GetInformationAboutBallot(ctx, req.(*GetInformationAboutBallotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VotingManager_ServiceDesc is the grpc.ServiceDesc for VotingManager service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -243,6 +275,10 @@ var VotingManager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterAddressToVoting",
 			Handler:    _VotingManager_RegisterAddressToVoting_Handler,
+		},
+		{
+			MethodName: "GetInformationAboutBallot",
+			Handler:    _VotingManager_GetInformationAboutBallot_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
