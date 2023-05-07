@@ -15,9 +15,9 @@ func NewStorage(client postgresql.Client) *Storage {
 	}
 }
 
-func (s *Storage) CheckExistsBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32) (int, error) {
+func (s *Storage) CheckExistsSigningBlindedAddressRequest(ctx context.Context, userID, votingID int32) (int, error) {
 	query := `
-		SELECT COUNT(*) FROM blinded_token_signing_request WHERE user_id = $1 AND voting_id = $2;
+		SELECT COUNT(*) FROM signing_blinded_address_request WHERE user_id = $1 AND voting_id = $2;
 	`
 
 	var count int
@@ -30,13 +30,13 @@ func (s *Storage) CheckExistsBlindedTokenSigningRequest(ctx context.Context, use
 	return count, nil
 }
 
-func (s *Storage) AddBlindedTokenSigningRequest(ctx context.Context, userID, votingID int32, blindedTokenHash string) error {
+func (s *Storage) AddSigningBlindedAddressRequest(ctx context.Context, blindedAddress string, userID, votingID int32) error {
 	query := `
-		INSERT INTO blinded_token_signing_request(user_id, voting_id, blinded_token_hash)
+		INSERT INTO signing_blinded_address_request(blinded_address, user_id, voting_id)
 		VALUES ($1, $2, $3);
 	`
 
-	_, err := s.client.Exec(ctx, query, userID, votingID, blindedTokenHash)
+	_, err := s.client.Exec(ctx, query, blindedAddress, userID, votingID)
 	if err != nil {
 		return err
 	}
@@ -44,14 +44,14 @@ func (s *Storage) AddBlindedTokenSigningRequest(ctx context.Context, userID, vot
 	return nil
 }
 
-func (s *Storage) CheckExistsRegisterAddressToVotingRequest(ctx context.Context, votingID int32, address string) (int, error) {
+func (s *Storage) CheckExistsRegisterAddressRequest(ctx context.Context, address string, votingID int32) (int, error) {
 	query := `
-		SELECT COUNT(*) FROM register_address_to_voting_by_signed_token_request WHERE voting_id = $1 AND address = $2;
+		SELECT COUNT(*) FROM register_address_request WHERE address = $1 AND voting_id = $2;
 	`
 
 	var count int
 
-	row := s.client.QueryRow(ctx, query, votingID, address)
+	row := s.client.QueryRow(ctx, query, address, votingID)
 	if err := row.Scan(&count); err != nil {
 		return -1, err
 	}
@@ -59,13 +59,13 @@ func (s *Storage) CheckExistsRegisterAddressToVotingRequest(ctx context.Context,
 	return count, nil
 }
 
-func (s *Storage) AddRegisterAddressToVotingRequest(ctx context.Context, address string, votingID int32, signedTokenHash string) error {
+func (s *Storage) AddRegisterAddressRequest(ctx context.Context, address string, votingID int32) error {
 	query := `
-		INSERT INTO register_address_to_voting_by_signed_token_request(address, voting_id, signed_token_hash)
-		VALUES ($1, $2, $3);
+		INSERT INTO register_address_request(address, voting_id)
+		VALUES ($1, $2);
 	`
 
-	_, err := s.client.Exec(ctx, query, address, votingID, signedTokenHash)
+	_, err := s.client.Exec(ctx, query, address, votingID)
 	if err != nil {
 		return err
 	}

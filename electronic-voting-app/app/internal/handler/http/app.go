@@ -1,23 +1,17 @@
 package http
 
 import (
-	"crypto/rand"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
 	pbvv "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-verifier/v1"
-	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/eth"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/model"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-app/internal/storage"
-	"github.com/cryptoballot/rsablind"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 )
@@ -55,6 +49,7 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.GET("/api/available_votings", AuthMiddleware(h.AvailableVotings))
 	router.GET("/api/public_key_voting/:voting_id", AuthMiddleware(h.PublicKeyVoting))
 	router.GET("/api/sign_blinded_address", AuthMiddleware(h.SignBlindedAddress))
+	router.POST("/api/register_address", h.RegisterAddress)
 
 	//router.HandlerFunc(http.MethodPost, "/api/register_to_voting", AuthMiddleware(h.RegisterToVoting))
 }
@@ -186,7 +181,7 @@ func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request, ps ht
 		UserID: userSession.userID,
 	}
 
-	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.GetVotingsAvailableToUser(r.Context(),
+	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.GetVotingsAvailableToUserID(r.Context(),
 		getVotingsAvailableToUserIDReqToVM)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -261,9 +256,51 @@ func (h *Handler) PublicKeyVoting(w http.ResponseWriter, r *http.Request, ps htt
 func (h *Handler) SignBlindedAddress(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
+	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
+	sessionToken := c.Value
+	userSession := sessions[sessionToken]
+
+	var signBlindedAddressReq model.SignBlindedAddressReq
+
+	err := json.NewDecoder(r.Body).Decode(&signBlindedAddressReq)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	signBlindedAddressReqToVV := &pbvv.SignBlindedAddressRequest{
+		UserID:         userSession.userID,
+		VotingID:       signBlindedAddressReq.VotingID,
+		BlindedAddress: signBlindedAddressReq.BlindedAddress,
+	}
+
+	signBlindedAddressRespFromVV, err := h.votingVerifierClient.SignBlindedAddress(r.Context(), signBlindedAddressReqToVV)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	signedBlindedAddress := signBlindedAddressRespFromVV.GetSignedBlindedAddress()
+
+	signedBlindedAddressResp := model.SignBlindedAddressResp{
+		SignedBlindedAddress: signedBlindedAddress,
+	}
+
+	signedBlindedAddressRespJson, err := json.Marshal(signedBlindedAddressResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(signedBlindedAddressRespJson)
 }
 
-func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) RegisterAddress(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+}
+
+/*func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]
@@ -349,4 +386,4 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
+}*/

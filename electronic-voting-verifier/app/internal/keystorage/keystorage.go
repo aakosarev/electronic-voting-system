@@ -99,18 +99,18 @@ func (ks *KeyStorage) getPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey,
 	return privateKey, nil
 }
 
-func (ks *KeyStorage) SignBlindedToken(blindedToken []byte, votingID int32) ([]byte, error) {
+func (ks *KeyStorage) SignBlindedAddress(blindedAddress []byte, votingID int32) ([]byte, error) {
 	privateKey, err := ks.getPrivateKeyForVotingID(votingID)
 	if err != nil {
 		return nil, err
 	}
 
-	signedBlindedToken, err := rsablind.BlindSign(privateKey, blindedToken)
+	signedBlindedAddress, err := rsablind.BlindSign(privateKey, blindedAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	return signedBlindedToken, nil
+	return signedBlindedAddress, nil
 }
 
 func (ks *KeyStorage) VerifySignature(signedToken, token []byte, votingID int32) (bool, error) {

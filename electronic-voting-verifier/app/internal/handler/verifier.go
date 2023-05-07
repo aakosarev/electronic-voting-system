@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -43,7 +42,7 @@ func (h *Handler) GetPublicKeyForVotingID(ctx context.Context, req *pbvv.GetPubl
 	return &pbvv.GetPublicKeyForVotingIDResponse{PublicKeyBytes: publicKeyBytes}, nil
 }
 
-func (h *Handler) SignBlindedPublicKey(ctx context.Context, req *pbvv.SignBlindedPublicKeyRequest) (*pbvv.SignBlindedPublicKeyResponse, error) {
+func (h *Handler) SignBlindedAddress(ctx context.Context, req *pbvv.SignBlindedAddressRequest) (*pbvv.SignBlindedAddressResponse, error) {
 	getVotingsAvailableToUserIDReqToVM := &pbvm.GetVotingsAvailableToUserIDRequest{UserID: req.GetUserID()}
 
 	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.GetVotingsAvailableToUserID(ctx, getVotingsAvailableToUserIDReqToVM)
@@ -65,7 +64,7 @@ func (h *Handler) SignBlindedPublicKey(ctx context.Context, req *pbvv.SignBlinde
 		return nil, fmt.Errorf("the user %d does not have the right to vote in the voting %d", req.GetUserID(), req.GetVotingID())
 	}
 
-	countRequests, err := h.storage.CheckExistsBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID())
+	countRequests, err := h.storage.CheckExistsSigningBlindedAddressRequest(ctx, req.GetUserID(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
@@ -74,22 +73,20 @@ func (h *Handler) SignBlindedPublicKey(ctx context.Context, req *pbvv.SignBlinde
 		return nil, errors.New("such a token signing request already exists")
 	}
 
-	signedBlindedToken, err := h.keystorage.SignBlindedToken(req.GetBlindedToken(), req.GetVotingID())
+	signedBlindedAddress, err := h.keystorage.SignBlindedAddress(req.GetBlindedAddress(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
 
-	blindedTokenHash := sha256.Sum256(req.GetBlindedToken())
-
-	err = h.storage.AddBlindedTokenSigningRequest(ctx, req.GetUserID(), req.GetVotingID(), hex.EncodeToString(blindedTokenHash[:]))
+	err = h.storage.AddSigningBlindedAddressRequest(ctx, hex.EncodeToString(req.GetBlindedAddress()), req.GetUserID(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
 
-	return &pbvv.SignBlindedTokenResponse{SignedBlindedToken: signedBlindedToken}, nil
+	return &pbvv.SignBlindedAddressResponse{SignedBlindedAddress: signedBlindedAddress}, nil
 }
 
-func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
+/*func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
 
 	ok, err := h.keystorage.VerifySignature(req.GetSignedToken(), req.GetToken(), req.GetVotingID())
 	if err != nil {
@@ -127,7 +124,7 @@ func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req 
 	}
 
 	return &emptypb.Empty{}, nil
-}
+}*/
 
 func (h *Handler) GenerateRSAKeyPairForVotingID(ctx context.Context, req *pbvv.GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error) {
 	err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID())
