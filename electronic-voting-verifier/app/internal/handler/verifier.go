@@ -31,7 +31,7 @@ func NewHandler(keystorage *keystorage.KeyStorage, storage *storage.Storage, srv
 }
 
 func (h *Handler) GetPublicKeyForVotingID(ctx context.Context, req *pbvv.GetPublicKeyForVotingIDRequest) (*pbvv.GetPublicKeyForVotingIDResponse, error) {
-	if err := h.keystorage.GenerateKeyPairForVotingID(req.GetVotingID()); err != nil {
+	if err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID()); err != nil {
 		return nil, err
 	}
 
@@ -124,6 +124,15 @@ func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req 
 	err = h.storage.AddRegisterAddressToVotingRequest(ctx, req.GetAddress(), req.GetVotingID(), hex.EncodeToString(signedTokenHash[:]))
 	if err != nil {
 		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (h *Handler) GenerateRSAKeyPairForVotingID(ctx context.Context, req *pbvv.GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error) {
+	err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID())
+	if err != nil {
+		return nil, fmt.Errorf("generate rsa key pair for voting id [%d]: %v", req.GetVotingID(), err)
 	}
 
 	return &emptypb.Empty{}, nil

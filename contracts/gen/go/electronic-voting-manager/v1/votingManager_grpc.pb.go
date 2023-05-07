@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VotingManagerClient interface {
-	CreateVoting(ctx context.Context, in *CreateVotingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateVoting(ctx context.Context, in *CreateVotingRequest, opts ...grpc.CallOption) (*CreateVotingResponse, error)
 	GetAllVotings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllVotingsResponse, error)
 	AddRightToVote(ctx context.Context, in *AddRightToVoteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetVotingsAvailableToUser(ctx context.Context, in *GetVotingsAvailableToUserRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserResponse, error)
@@ -39,8 +39,8 @@ func NewVotingManagerClient(cc grpc.ClientConnInterface) VotingManagerClient {
 	return &votingManagerClient{cc}
 }
 
-func (c *votingManagerClient) CreateVoting(ctx context.Context, in *CreateVotingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *votingManagerClient) CreateVoting(ctx context.Context, in *CreateVotingRequest, opts ...grpc.CallOption) (*CreateVotingResponse, error) {
+	out := new(CreateVotingResponse)
 	err := c.cc.Invoke(ctx, "/VotingManager/CreateVoting", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (c *votingManagerClient) GetInformationAboutBallot(ctx context.Context, in 
 // All implementations must embed UnimplementedVotingManagerServer
 // for forward compatibility
 type VotingManagerServer interface {
-	CreateVoting(context.Context, *CreateVotingRequest) (*emptypb.Empty, error)
+	CreateVoting(context.Context, *CreateVotingRequest) (*CreateVotingResponse, error)
 	GetAllVotings(context.Context, *emptypb.Empty) (*GetAllVotingsResponse, error)
 	AddRightToVote(context.Context, *AddRightToVoteRequest) (*emptypb.Empty, error)
 	GetVotingsAvailableToUser(context.Context, *GetVotingsAvailableToUserRequest) (*GetVotingsAvailableToUserResponse, error)
@@ -110,7 +110,7 @@ type VotingManagerServer interface {
 type UnimplementedVotingManagerServer struct {
 }
 
-func (UnimplementedVotingManagerServer) CreateVoting(context.Context, *CreateVotingRequest) (*emptypb.Empty, error) {
+func (UnimplementedVotingManagerServer) CreateVoting(context.Context, *CreateVotingRequest) (*CreateVotingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVoting not implemented")
 }
 func (UnimplementedVotingManagerServer) GetAllVotings(context.Context, *emptypb.Empty) (*GetAllVotingsResponse, error) {

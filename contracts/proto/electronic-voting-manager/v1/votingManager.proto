@@ -27,6 +27,10 @@ message CreateVotingRequest {
   google.protobuf.Timestamp endTime = 3;
 }
 
+message CreateVotingResponse {
+  int32 votingID = 1;
+}
+
 message GetAllVotingsResponse {
   repeated Voting votings = 1;
 }
@@ -69,7 +73,7 @@ message GetInformationAboutBallotResponse {
 
 
 service VotingManager {
-  rpc CreateVoting(CreateVotingRequest) returns (google.protobuf.Empty);
+  rpc CreateVoting(CreateVotingRequest) returns (CreateVotingResponse);
   rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
   rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
   rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserRequest) returns (GetVotingsAvailableToUserResponse);

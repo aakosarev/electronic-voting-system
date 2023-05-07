@@ -20,12 +20,14 @@ import (
 type Handler struct {
 	votingManagerClient pbvm.VotingManagerClient
 	votingAppClient     pbva.VotingAppClient
+	//votingVerifierClient pbvv.VotingVerifierClient
 }
 
-func NewHandler(connVotingManager, connVotingApp *grpc.ClientConn) *Handler {
+func NewHandler(connVotingManager, connVotingApp, connVotingVerifier *grpc.ClientConn) *Handler {
 	return &Handler{
 		votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager),
 		votingAppClient:     pbva.NewVotingAppClient(connVotingApp),
+		//votingVerifierClient: pbvv.NewVotingVerifierClient(connVotingVerifier),
 	}
 }
 
