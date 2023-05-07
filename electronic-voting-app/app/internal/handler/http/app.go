@@ -37,7 +37,7 @@ func NewHandler(userStorage *storage.UserStorage, connVotingManager, connVotingV
 }
 
 type session struct {
-	username  int32
+	userID    int32
 	expiresAt time.Time
 }
 
@@ -51,7 +51,6 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.HandlerFunc(http.MethodPost, "/login", h.Login)
 	router.HandlerFunc(http.MethodPost, "/initial_login", AuthMiddleware(h.InitialLogin))
 	router.HandlerFunc(http.MethodGet, "/logout", h.Logout)
-	router.HandlerFunc(http.MethodPost, "/refresh", AuthMiddleware(h.Refresh))
 	router.HandlerFunc(http.MethodGet, "/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
 	router.HandlerFunc(http.MethodGet, "/available_votings", AuthMiddleware(h.AvailableVotings))
 	router.HandlerFunc(http.MethodPost, "/register_to_voting", AuthMiddleware(h.RegisterToVoting))
@@ -64,31 +63,31 @@ func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request) {
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]
 
-	forceEnterDetails, err := h.userStorage.GetForceEnterDetailsByUsername(r.Context(), userSession.username)
+	forceEnterDetails, err := h.userStorage.GetForceEnterDetailsByUserID(r.Context(), userSession.userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"force_enter_details": %t}`, forceEnterDetails)))
+	w.Write([]byte(fmt.Sprintf(`{"force_enter_details": %t}`, forceEnterDetails))) //TODO remake to response-struct
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	var loginUser model.LoginUser
-	err := json.NewDecoder(r.Body).Decode(&loginUser)
+	loginReq := model.LoginReq{}
+	err := json.NewDecoder(r.Body).Decode(&loginReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), loginUser.Username)
+	passwordHash, err := h.userStorage.GetPasswordHashByUserID(r.Context(), loginReq.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(loginUser.Password)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(loginReq.Password)); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -97,7 +96,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	expiresAt := time.Now().Add(1 * time.Hour)
 
 	sessions[sessionToken] = session{
-		username:  loginUser.Username,
+		userID:    loginReq.UserID,
 		expiresAt: expiresAt,
 	}
 
@@ -113,38 +112,37 @@ func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]
 
-	var ilu model.InitialLoginUser
-	err := json.NewDecoder(r.Body).Decode(&ilu)
+	var initialLoginReq model.InitialLoginReq
+	err := json.NewDecoder(r.Body).Decode(&initialLoginReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if ilu.NewPassword != ilu.ReenteredPassword {
+	if initialLoginReq.NewPassword != initialLoginReq.ReenteredPassword {
 		w.WriteHeader(http.StatusBadRequest)
-		// TODO w.Write error
 		return
 	}
 
-	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
+	passwordHash, err := h.userStorage.GetPasswordHashByUserID(r.Context(), userSession.userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(ilu.OldPassword)); err != nil {
+	if err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(initialLoginReq.OldPassword)); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		// TODO w.Write error
 		return
 	}
 
-	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(ilu.NewPassword), bcrypt.DefaultCost)
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(initialLoginReq.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err = h.userStorage.AddDetails(r.Context(), userSession.username, string(newPasswordHash), ilu.Email, ilu.FirstName, ilu.SecondName)
+	err = h.userStorage.AddDetails(r.Context(), userSession.userID, string(newPasswordHash),
+		initialLoginReq.Email, initialLoginReq.Name, initialLoginReq.Surname)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -174,28 +172,6 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
-	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
-	sessionToken := c.Value
-	userSession := sessions[sessionToken]
-
-	newSessionToken := uuid.NewString()
-	expiresAt := time.Now().Add(1 * time.Hour)
-
-	sessions[newSessionToken] = session{
-		username:  userSession.username,
-		expiresAt: expiresAt,
-	}
-
-	delete(sessions, sessionToken)
-
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Value:   newSessionToken,
-		Expires: expiresAt,
-	})
-}
-
 func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -204,7 +180,7 @@ func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request) {
 	userSession := sessions[sessionToken]
 
 	req := &pbvm.GetVotingsAvailableToUserRequest{
-		UserID: userSession.username,
+		UserID: userSession.userID,
 	}
 
 	resp, err := h.votingManagerClient.GetVotingsAvailableToUser(r.Context(), req)
@@ -283,7 +259,7 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqSignBlindedToken := &pbvv.SignBlindedTokenRequest{
-		UserID:       userSession.username,
+		UserID:       userSession.userID,
 		VotingID:     registerToVotingReq.VotingID,
 		BlindedToken: blindedToken,
 	}
@@ -298,7 +274,7 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	signedToken := rsablind.Unblind(publicKey, signedBlindedToken, unblinder)
 
-	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
+	passwordHash, err := h.userStorage.GetPasswordHashByUserID(r.Context(), userSession.userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

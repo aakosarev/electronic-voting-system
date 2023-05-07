@@ -3,7 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-registrat
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507073239-55d1e5566a95
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507074626-5f39e4574580
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/julienschmidt/httprouter v1.3.0
 	golang.org/x/crypto v0.8.0

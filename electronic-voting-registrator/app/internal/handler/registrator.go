@@ -2,9 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	pbva "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-app/v1"
 	pbvm "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-manager/v1"
+	pbvv "github.com/aakosarev/electronic-voting-system/contracts/gen/go/electronic-voting-verifier/v1"
 	"github.com/aakosarev/electronic-voting-system/electronic-voting-registrator/internal/model"
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
@@ -18,16 +18,16 @@ import (
 )
 
 type Handler struct {
-	votingManagerClient pbvm.VotingManagerClient
-	votingAppClient     pbva.VotingAppClient
-	//votingVerifierClient pbvv.VotingVerifierClient
+	votingManagerClient  pbvm.VotingManagerClient
+	votingAppClient      pbva.VotingAppClient
+	votingVerifierClient pbvv.VotingVerifierClient
 }
 
 func NewHandler(connVotingManager, connVotingApp, connVotingVerifier *grpc.ClientConn) *Handler {
 	return &Handler{
-		votingManagerClient: pbvm.NewVotingManagerClient(connVotingManager),
-		votingAppClient:     pbva.NewVotingAppClient(connVotingApp),
-		//votingVerifierClient: pbvv.NewVotingVerifierClient(connVotingVerifier),
+		votingManagerClient:  pbvm.NewVotingManagerClient(connVotingManager),
+		votingAppClient:      pbva.NewVotingAppClient(connVotingApp),
+		votingVerifierClient: pbvv.NewVotingVerifierClient(connVotingVerifier),
 	}
 }
 
@@ -53,13 +53,21 @@ func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
 		EndTime:       timestamppb.New(createVotingReq.EndTime),
 	}
 
-	_, err = h.votingManagerClient.CreateVoting(r.Context(), createVotingReqToVM)
+	createVotingRespFromVM, err := h.votingManagerClient.CreateVoting(r.Context(), createVotingReqToVM)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	//request to verifier for creating RSA key pair
+	generateRSAKeyPairForVotingIDReqToVV := &pbvv.GenerateRSAKeyPairForVotingIDRequest{
+		VotingID: createVotingRespFromVM.GetVotingID(),
+	}
+
+	_, err = h.votingVerifierClient.GenerateRSAKeyPairForVotingID(r.Context(), generateRSAKeyPairForVotingIDReqToVV)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -82,82 +90,83 @@ func (h *Handler) AddRightToVote(w http.ResponseWriter, r *http.Request) {
 	for i := range b {
 		b[i] = chars[rand.Intn(len(chars))]
 	}
-	password := string(b)
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword(b, bcrypt.DefaultCost)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	reqToVotingApp := &pbva.RegisterUserRequest{
+	registerUserReqToVA := &pbva.RegisterUserRequest{
 		Username:     userID,
 		PasswordHash: string(passwordHash),
 	}
 
-	_, err = h.votingAppClient.RegisterUser(r.Context(), reqToVotingApp)
+	_, err = h.votingAppClient.RegisterUser(r.Context(), registerUserReqToVA)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	for _, votingID := range addRightToVoteReq.VotingIDs {
-		reqToVotingManager := &pbvm.AddRightToVoteRequest{
+		addRightToVoteReqToVM := &pbvm.AddRightToVoteRequest{
 			UserID:   userID,
 			VotingID: votingID,
 		}
-		_, err = h.votingManagerClient.AddRightToVote(r.Context(), reqToVotingManager)
+		_, err = h.votingManagerClient.AddRightToVote(r.Context(), addRightToVoteReqToVM)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
 
-	credentials := model.AddRightToVoteResp{
+	addRightToVoteResp := model.AddRightToVoteResp{
 		UserID:   userID,
-		Password: password,
+		Password: string(b),
 	}
 
-	credentialsJson, err := json.Marshal(credentials)
+	addRightToVoteRespJson, err := json.Marshal(addRightToVoteResp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(credentialsJson)
+	w.Write(addRightToVoteRespJson)
 }
 
 func (h *Handler) GetAllVotings(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	resp, err := h.votingManagerClient.GetAllVotings(r.Context(), &emptypb.Empty{})
+	getAllVotingsRespFromVM, err := h.votingManagerClient.GetAllVotings(r.Context(), &emptypb.Empty{})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"message":"%s"}`, err.Error())))
 		return
 	}
 
-	pbVotings := resp.GetVotings()
-	var votings []*model.GetAllVotingsResp
+	pbVotings := getAllVotingsRespFromVM.GetVotings()
+	var votings []*model.Voting
 
 	for _, v := range pbVotings {
-		votings = append(votings, &model.GetAllVotingsResp{
-			VotingID:    v.GetVotingID(),
-			VotingTitle: v.GetVotingTitle(),
-			EndTime:     v.GetEndTime(),
-			Address:     v.GetAddress(),
-			CreatedOn:   v.GetCreatedOn().AsTime(),
+		votings = append(votings, &model.Voting{
+			ID:        v.GetVotingID(),
+			Title:     v.GetVotingTitle(),
+			EndTime:   v.GetEndTime(),
+			Address:   v.GetAddress(),
+			CreatedOn: v.GetCreatedOn().AsTime(),
 		})
 	}
 
-	votingsJson, err := json.Marshal(votings)
+	getAllVotingsResp := model.GetAllVotingsResp{
+		Votings: votings,
+	}
+
+	getAllVotingsRespJson, err := json.Marshal(getAllVotingsResp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"message": "%s"}`, err.Error())))
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(votingsJson)
+	w.Write(getAllVotingsRespJson)
 }

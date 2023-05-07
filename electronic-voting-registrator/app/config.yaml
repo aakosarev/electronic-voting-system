@@ -9,3 +9,7 @@ voting-manager-grpc:
 voting-app-grpc:
   ip: 0.0.0.0
   port: 30003
+
+voting-verifier-grpc:
+  ip: 0.0.0.0
+  port: 30005

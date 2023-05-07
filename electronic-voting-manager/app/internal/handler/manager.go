@@ -29,18 +29,18 @@ func NewHandler(storage *storage.Storage, contractSession *voting.ContractSessio
 	}
 }
 
-func (h *Handler) CreateVoting(ctx context.Context, req *pb.CreateVotingRequest) (*emptypb.Empty, error) {
+func (h *Handler) CreateVoting(ctx context.Context, req *pb.CreateVotingRequest) (*pb.CreateVotingResponse, error) {
 	address, err := voting.CreateVoting(h.contractSession, h.ethclient, req.GetVotingTitle(), req.GetEndTime().AsTime(), req.GetVotingOptions())
 	if err != nil {
 		return nil, err
 	}
 
-	err = h.storage.AddVoting(ctx, req.GetVotingTitle(), req.GetEndTime().AsTime().Unix(), address)
+	votingID, err := h.storage.AddVoting(ctx, req.GetVotingTitle(), req.GetEndTime().AsTime().Unix(), address)
 	if err != nil {
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, nil
+	return &pb.CreateVotingResponse{VotingID: votingID}, nil
 }
 
 func (h *Handler) GetAllVotings(ctx context.Context, _ *emptypb.Empty) (*pb.GetAllVotingsResponse, error) {
@@ -72,7 +72,7 @@ func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequ
 	return &emptypb.Empty{}, nil
 }
 
-func (h *Handler) GetVotingsAvailableToUser(ctx context.Context, req *pb.GetVotingsAvailableToUserRequest) (*pb.GetVotingsAvailableToUserResponse, error) {
+func (h *Handler) GetVotingsAvailableToUserID(ctx context.Context, req *pb.GetVotingsAvailableToUserRequest) (*pb.GetVotingsAvailableToUserResponse, error) {
 	votingsAvailableToUser, err := h.storage.FindVotingsAvailableToUser(ctx, req.GetUserID())
 	if err != nil {
 		return nil, err

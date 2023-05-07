@@ -64,18 +64,20 @@ func (s *Storage) AddRightToVote(ctx context.Context, userID, votingID int32) er
 	return nil
 }
 
-func (s *Storage) AddVoting(ctx context.Context, title string, endTime int64, address string) error {
+func (s *Storage) AddVoting(ctx context.Context, title string, endTime int64, address string) (int32, error) {
 	query := `
 		INSERT INTO voting(title, end_time, address)
-		VALUES ($1, $2, $3);
+		VALUES ($1, $2, $3) RETURNING id;
 	`
 
-	_, err := s.client.Exec(ctx, query, title, endTime, address)
+	var votingID int32
+
+	err := s.client.QueryRow(ctx, query, title, endTime, address).Scan(&votingID)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
-	return nil
+	return votingID, nil
 }
 
 func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error) {

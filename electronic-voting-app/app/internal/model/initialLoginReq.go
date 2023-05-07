@@ -1,8 +1,8 @@
 package model
 
-type InitialLoginUser struct {
-	FirstName         string `json:"first_name"`
-	SecondName        string `json:"second_name"`
+type InitialLoginReq struct {
+	Name              string `json:"name"`
+	Surname           string `json:"surname"`
 	Email             string `json:"email"`
 	OldPassword       string `json:"old_password"`
 	NewPassword       string `json:"new_password"`

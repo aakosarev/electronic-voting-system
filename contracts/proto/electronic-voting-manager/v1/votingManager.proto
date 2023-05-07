@@ -13,7 +13,7 @@ message Voting {
   google.protobuf.Timestamp createdOn = 5;
 }
 
-message VotingAvailableToUser {
+message VotingAvailableToUserID {
   int32 userID = 1;
   int32 votingID = 2;
   google.protobuf.Timestamp createdOn = 3;
@@ -40,12 +40,12 @@ message AddRightToVoteRequest {
   int32 votingID = 2;
 }
 
-message GetVotingsAvailableToUserRequest{
+message GetVotingsAvailableToUserIDRequest{
   int32 userID = 1;
 }
 
-message GetVotingsAvailableToUserResponse{
-  repeated VotingAvailableToUser votingsAvailableToUser = 1;
+message GetVotingsAvailableToUserIDResponse{
+  repeated VotingAvailableToUserID votingsAvailableToUserID = 1;
 }
 
 message RegisterAddressToVotingRequest {
@@ -70,13 +70,11 @@ message GetInformationAboutBallotResponse {
   map <int64, Option> options = 5;
 }
 
-
-
 service VotingManager {
   rpc CreateVoting(CreateVotingRequest) returns (CreateVotingResponse);
   rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
   rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
-  rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserRequest) returns (GetVotingsAvailableToUserResponse);
+  rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserIDRequest) returns (GetVotingsAvailableToUserIDResponse);
   rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
   rpc GetInformationAboutBallot(GetInformationAboutBallotRequest) returns (GetInformationAboutBallotResponse);
 }
