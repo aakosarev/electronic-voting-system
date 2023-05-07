@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VotingVerifierClient interface {
 	GetPublicKeyForVotingID(ctx context.Context, in *GetPublicKeyForVotingIDRequest, opts ...grpc.CallOption) (*GetPublicKeyForVotingIDResponse, error)
-	SignBlindedToken(ctx context.Context, in *SignBlindedTokenRequest, opts ...grpc.CallOption) (*SignBlindedTokenResponse, error)
+	SignBlindedPublicKey(ctx context.Context, in *SignBlindedPublicKeyRequest, opts ...grpc.CallOption) (*SignBlindedPublicKeyResponse, error)
 	RegisterAddressToVotingBySignedToken(ctx context.Context, in *RegisterAddressToVotingBySignedTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GenerateRSAKeyPairForVotingID(ctx context.Context, in *GenerateRSAKeyPairForVotingIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -46,9 +46,9 @@ func (c *votingVerifierClient) GetPublicKeyForVotingID(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *votingVerifierClient) SignBlindedToken(ctx context.Context, in *SignBlindedTokenRequest, opts ...grpc.CallOption) (*SignBlindedTokenResponse, error) {
-	out := new(SignBlindedTokenResponse)
-	err := c.cc.Invoke(ctx, "/VotingVerifier/SignBlindedToken", in, out, opts...)
+func (c *votingVerifierClient) SignBlindedPublicKey(ctx context.Context, in *SignBlindedPublicKeyRequest, opts ...grpc.CallOption) (*SignBlindedPublicKeyResponse, error) {
+	out := new(SignBlindedPublicKeyResponse)
+	err := c.cc.Invoke(ctx, "/VotingVerifier/SignBlindedPublicKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (c *votingVerifierClient) GenerateRSAKeyPairForVotingID(ctx context.Context
 // for forward compatibility
 type VotingVerifierServer interface {
 	GetPublicKeyForVotingID(context.Context, *GetPublicKeyForVotingIDRequest) (*GetPublicKeyForVotingIDResponse, error)
-	SignBlindedToken(context.Context, *SignBlindedTokenRequest) (*SignBlindedTokenResponse, error)
+	SignBlindedPublicKey(context.Context, *SignBlindedPublicKeyRequest) (*SignBlindedPublicKeyResponse, error)
 	RegisterAddressToVotingBySignedToken(context.Context, *RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error)
 	GenerateRSAKeyPairForVotingID(context.Context, *GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedVotingVerifierServer()
@@ -91,8 +91,8 @@ type UnimplementedVotingVerifierServer struct {
 func (UnimplementedVotingVerifierServer) GetPublicKeyForVotingID(context.Context, *GetPublicKeyForVotingIDRequest) (*GetPublicKeyForVotingIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPublicKeyForVotingID not implemented")
 }
-func (UnimplementedVotingVerifierServer) SignBlindedToken(context.Context, *SignBlindedTokenRequest) (*SignBlindedTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SignBlindedToken not implemented")
+func (UnimplementedVotingVerifierServer) SignBlindedPublicKey(context.Context, *SignBlindedPublicKeyRequest) (*SignBlindedPublicKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignBlindedPublicKey not implemented")
 }
 func (UnimplementedVotingVerifierServer) RegisterAddressToVotingBySignedToken(context.Context, *RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterAddressToVotingBySignedToken not implemented")
@@ -131,20 +131,20 @@ func _VotingVerifier_GetPublicKeyForVotingID_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VotingVerifier_SignBlindedToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SignBlindedTokenRequest)
+func _VotingVerifier_SignBlindedPublicKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignBlindedPublicKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VotingVerifierServer).SignBlindedToken(ctx, in)
+		return srv.(VotingVerifierServer).SignBlindedPublicKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/VotingVerifier/SignBlindedToken",
+		FullMethod: "/VotingVerifier/SignBlindedPublicKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VotingVerifierServer).SignBlindedToken(ctx, req.(*SignBlindedTokenRequest))
+		return srv.(VotingVerifierServer).SignBlindedPublicKey(ctx, req.(*SignBlindedPublicKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -197,8 +197,8 @@ var VotingVerifier_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VotingVerifier_GetPublicKeyForVotingID_Handler,
 		},
 		{
-			MethodName: "SignBlindedToken",
-			Handler:    _VotingVerifier_SignBlindedToken_Handler,
+			MethodName: "SignBlindedPublicKey",
+			Handler:    _VotingVerifier_SignBlindedPublicKey_Handler,
 		},
 		{
 			MethodName: "RegisterAddressToVotingBySignedToken",

@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type VotingAvailableToUser struct {
+type VotingAvailableToUserID struct {
 	UserID    int32
 	VotingID  int32
 	CreatedOn time.Time

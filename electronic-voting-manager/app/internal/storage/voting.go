@@ -80,7 +80,7 @@ func (s *Storage) AddVoting(ctx context.Context, title string, endTime int64, ad
 	return votingID, nil
 }
 
-func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int32) ([]*model.VotingAvailableToUser, error) {
+func (s *Storage) FindVotingsAvailableToUserID(ctx context.Context, userID int32) ([]*model.VotingAvailableToUserID, error) {
 	query := `
 		SELECT rtv.user_id, rtv.voting_id, rtv.created_on, v.title, v.address
 		FROM right_to_vote rtv
@@ -88,12 +88,12 @@ func (s *Storage) FindVotingsAvailableToUser(ctx context.Context, userID int32) 
 		WHERE rtv.user_id = $1
 	`
 
-	var votingsAvailableToUser []*model.VotingAvailableToUser
+	var votingsAvailableToUserID []*model.VotingAvailableToUserID
 
-	err := pgxscan.Select(ctx, s.client, &votingsAvailableToUser, query, userID)
+	err := pgxscan.Select(ctx, s.client, &votingsAvailableToUserID, query, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return votingsAvailableToUser, nil
+	return votingsAvailableToUserID, nil
 }

@@ -32,9 +32,9 @@ func NewHandler(connVotingManager, connVotingApp, connVotingVerifier *grpc.Clien
 }
 
 func (h *Handler) Register(router *httprouter.Router) {
-	router.HandlerFunc(http.MethodPost, "/create_voting", h.CreateVoting)
-	router.HandlerFunc(http.MethodPost, "/add_right_to_vote", h.AddRightToVote)
-	router.HandlerFunc(http.MethodGet, "/votings", h.GetAllVotings)
+	router.HandlerFunc(http.MethodPost, "/api/create_voting", h.CreateVoting)
+	router.HandlerFunc(http.MethodPost, "/api/add_right_to_vote", h.AddRightToVote)
+	router.HandlerFunc(http.MethodGet, "/api/votings", h.GetAllVotings)
 }
 
 func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {

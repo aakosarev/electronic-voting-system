@@ -16,9 +16,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
-	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -48,15 +48,18 @@ func (s session) isExpired() bool {
 var sessions = map[string]session{}
 
 func (h *Handler) Register(router *httprouter.Router) {
-	router.HandlerFunc(http.MethodPost, "/login", h.Login)
-	router.HandlerFunc(http.MethodPost, "/initial_login", AuthMiddleware(h.InitialLogin))
-	router.HandlerFunc(http.MethodGet, "/logout", h.Logout)
-	router.HandlerFunc(http.MethodGet, "/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
-	router.HandlerFunc(http.MethodGet, "/available_votings", AuthMiddleware(h.AvailableVotings))
-	router.HandlerFunc(http.MethodPost, "/register_to_voting", AuthMiddleware(h.RegisterToVoting))
+	router.POST("/api/login", h.Login)
+	router.PATCH("/api/initial_login", AuthMiddleware(h.InitialLogin))
+	router.GET("/api/logout", h.Logout)
+	router.GET("/api/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
+	router.GET("/api/available_votings", AuthMiddleware(h.AvailableVotings))
+	router.GET("/api/public_key_voting/:voting_id", AuthMiddleware(h.PublicKeyVoting))
+	router.GET("/api/sign_blinded_public_key", AuthMiddleware(h.SignBlindedPublicKey))
+
+	//router.HandlerFunc(http.MethodPost, "/api/register_to_voting", AuthMiddleware(h.RegisterToVoting))
 }
 
-func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
 	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
@@ -73,7 +76,7 @@ func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"force_enter_details": %t}`, forceEnterDetails))) //TODO remake to response-struct
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	loginReq := model.LoginReq{}
 	err := json.NewDecoder(r.Body).Decode(&loginReq)
 	if err != nil {
@@ -107,7 +110,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]
@@ -151,7 +154,7 @@ func (h *Handler) InitialLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -172,51 +175,95 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
 	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]
 
-	req := &pbvm.GetVotingsAvailableToUserRequest{
+	getVotingsAvailableToUserIDReqToVM := &pbvm.GetVotingsAvailableToUserIDRequest{
 		UserID: userSession.userID,
 	}
 
-	resp, err := h.votingManagerClient.GetVotingsAvailableToUser(r.Context(), req)
+	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.GetVotingsAvailableToUser(r.Context(),
+		getVotingsAvailableToUserIDReqToVM)
 	if err != nil {
-		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	pbAvailableVotings := resp.GetVotingsAvailableToUser()
+	pbVotingsAvailableToUserID := getVotingsAvailableToUserIDRespFromVM.GetVotingsAvailableToUserID()
 
-	var availableVotings []*model.VotingAvailableToUser
+	var availableVotings []*model.AvailableVoting
 
-	for _, av := range pbAvailableVotings {
-		availableVotings = append(availableVotings, &model.VotingAvailableToUser{
+	for _, av := range pbVotingsAvailableToUserID {
+		availableVotings = append(availableVotings, &model.AvailableVoting{
 			UserID:     av.GetUserID(),
 			VotingID:   av.GetVotingID(),
 			CreatedOn:  av.GetCreatedOn().AsTime(),
 			Title:      av.GetVotingTitle(),
 			Address:    av.GetVotingAddress(),
 			Registered: false, //TODO to change!
-			Requested:  false, //TODO to change!
 		})
 	}
 
-	availableVotingsJson, err := json.Marshal(availableVotings)
+	votingsAvailableToUserIDResp := model.VotingsAvailableToUserIDResp{
+		AvailableVotings: availableVotings,
+	}
+
+	votingsAvailableToUserIDRespJson, err := json.Marshal(votingsAvailableToUserIDResp)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(availableVotingsJson)
+	w.Write(votingsAvailableToUserIDRespJson)
 }
 
-func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PublicKeyVoting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+
+	votingIDStr := ps.ByName("voting_id")
+	votingID, err := strconv.ParseInt(votingIDStr, 10, 32)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	getPublicKeyForVotingIDReqToVV := &pbvv.GetPublicKeyForVotingIDRequest{
+		VotingID: int32(votingID),
+	}
+
+	getPublicKeyForVotingIDRespFromVV, err := h.votingVerifierClient.GetPublicKeyForVotingID(r.Context(), getPublicKeyForVotingIDReqToVV)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	publicKeyBytes := getPublicKeyForVotingIDRespFromVV.GetPublicKeyBytes()
+
+	publicKeyResp := model.PublicKeyResp{
+		PublicKeyBytes: publicKeyBytes,
+	}
+
+	publicKeyRespJson, err := json.Marshal(publicKeyResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(publicKeyRespJson)
+}
+
+func (h *Handler) SignBlindedPublicKey(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+
+}
+
+func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
 	sessionToken := c.Value
 	userSession := sessions[sessionToken]

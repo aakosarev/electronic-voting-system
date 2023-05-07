@@ -2,11 +2,12 @@ package http
 
 import (
 	"context"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
 
-func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func AuthMiddleware(next httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 		c, err := r.Cookie("session_token")
 		if err != nil {
@@ -33,6 +34,6 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		ctx := context.WithValue(r.Context(), "cookie_session_token", c)
 
-		next(w, r.WithContext(ctx))
+		next(w, r.WithContext(ctx), ps)
 	}
 }

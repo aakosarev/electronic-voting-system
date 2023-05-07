@@ -72,15 +72,15 @@ func (h *Handler) AddRightToVote(ctx context.Context, req *pb.AddRightToVoteRequ
 	return &emptypb.Empty{}, nil
 }
 
-func (h *Handler) GetVotingsAvailableToUserID(ctx context.Context, req *pb.GetVotingsAvailableToUserRequest) (*pb.GetVotingsAvailableToUserResponse, error) {
-	votingsAvailableToUser, err := h.storage.FindVotingsAvailableToUser(ctx, req.GetUserID())
+func (h *Handler) GetVotingsAvailableToUserID(ctx context.Context, req *pb.GetVotingsAvailableToUserIDRequest) (*pb.GetVotingsAvailableToUserIDResponse, error) {
+	votingsAvailableToUserID, err := h.storage.FindVotingsAvailableToUserID(ctx, req.GetUserID())
 	if err != nil {
 		return nil, err
 	}
 
-	pbVotingsAvailableToUser := make([]*pb.VotingAvailableToUser, len(votingsAvailableToUser))
-	for i, v := range votingsAvailableToUser {
-		pbVotingsAvailableToUser[i] = &pb.VotingAvailableToUser{
+	pbVotingsAvailableToUserID := make([]*pb.VotingAvailableToUserID, len(votingsAvailableToUserID))
+	for i, v := range votingsAvailableToUserID {
+		pbVotingsAvailableToUserID[i] = &pb.VotingAvailableToUserID{
 			UserID:        v.UserID,
 			VotingID:      v.VotingID,
 			CreatedOn:     timestamppb.New(v.CreatedOn),
@@ -89,7 +89,7 @@ func (h *Handler) GetVotingsAvailableToUserID(ctx context.Context, req *pb.GetVo
 		}
 	}
 
-	return &pb.GetVotingsAvailableToUserResponse{VotingsAvailableToUser: pbVotingsAvailableToUser}, nil
+	return &pb.GetVotingsAvailableToUserIDResponse{VotingsAvailableToUserID: pbVotingsAvailableToUserID}, nil
 }
 
 func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pb.RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
