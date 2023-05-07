@@ -3,7 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-app
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507143818-f0bb42396378
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507163322-835bc7961b18
 	github.com/ethereum/go-ethereum v1.11.6
 	github.com/georgysavva/scany v1.2.1
 	github.com/google/uuid v1.3.0

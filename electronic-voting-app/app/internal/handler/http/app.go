@@ -51,7 +51,7 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.GET("/api/sign_blinded_address", AuthMiddleware(h.SignBlindedAddress))
 	router.POST("/api/register_address", h.RegisterAddress)
 	router.GET("/api/registration_statuses", h.RegistrationStatuses)
-
+	router.GET("/api/voting_information/:voting_id", AuthMiddleware(h.VotingInformation))
 }
 
 func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -322,12 +322,48 @@ func (h *Handler) RegisterAddress(w http.ResponseWriter, r *http.Request, ps htt
 func (h *Handler) RegistrationStatuses(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var signBlindedAddressReq model.SignBlindedAddressReq
+	var registrationStatusesReq model.RegistrationStatusesReq
 
-	err := json.NewDecoder(r.Body).Decode(&signBlindedAddressReq)
+	err := json.NewDecoder(r.Body).Decode(&registrationStatusesReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	getRegistrationStatusesReqToVV := &pbvv.GetRegistrationStatusesRequest{
+		Addresses: registrationStatusesReq.Addresses,
+	}
+
+	getRegistrationStatusesRespFromVV, err := h.votingVerifierClient.GetRegistrationStatuses(r.Context(), getRegistrationStatusesReqToVV)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	statuses := getRegistrationStatusesRespFromVV.GetStatuses()
+
+	registrationStatusesResp := model.RegistrationStatusesResp{
+		Statuses: statuses,
+	}
+
+	registrationStatusesRespJson, err := json.Marshal(registrationStatusesResp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(registrationStatusesRespJson)
+}
+
+func (h *Handler) VotingInformation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	/*	w.Header().Set("Content-Type", "application/json")
+
+		votingIDStr := ps.ByName("voting_id")
+		votingID, err := strconv.ParseInt(votingIDStr, 10, 32)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}*/
 
 }

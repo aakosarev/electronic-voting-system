@@ -132,8 +132,21 @@ func (h *Handler) RegisterAddress(ctx context.Context, req *pbvv.RegisterAddress
 	return &emptypb.Empty{}, nil
 }
 
-/*func (h *Handler) GetRegistrationStatuses(ctx context.Context, req *pbvv.GetRegistrationStatusesRequest) (*pbvv.GetRegistrationStatusesResponse, error) {
+func (h *Handler) GetRegistrationStatuses(ctx context.Context, req *pbvv.GetRegistrationStatusesRequest) (*pbvv.GetRegistrationStatusesResponse, error) {
+	addresses := req.GetAddresses()
+	statuses := make(map[int32]bool, len(addresses))
 
+	for votingID, address := range addresses {
+		count, err := h.storage.CheckExistsRegisterAddressRequest(ctx, address, votingID)
+		if err != nil {
+			return nil, err
+		}
+		if count == 1 {
+			statuses[votingID] = true
+		} else {
+			statuses[votingID] = false
+		}
+	}
 
-	re
-}*/
+	return &pbvv.GetRegistrationStatusesResponse{Statuses: statuses}, nil
+}

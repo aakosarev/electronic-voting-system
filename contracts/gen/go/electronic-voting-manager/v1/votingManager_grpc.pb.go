@@ -28,7 +28,7 @@ type VotingManagerClient interface {
 	AddRightToVote(ctx context.Context, in *AddRightToVoteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetVotingsAvailableToUserID(ctx context.Context, in *GetVotingsAvailableToUserIDRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserIDResponse, error)
 	RegisterAddressToVoting(ctx context.Context, in *RegisterAddressToVotingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetInformationAboutBallot(ctx context.Context, in *GetInformationAboutBallotRequest, opts ...grpc.CallOption) (*GetInformationAboutBallotResponse, error)
+	GetVotingInformation(ctx context.Context, in *GetVotingInformationRequest, opts ...grpc.CallOption) (*GetVotingInformationResponse, error)
 }
 
 type votingManagerClient struct {
@@ -84,9 +84,9 @@ func (c *votingManagerClient) RegisterAddressToVoting(ctx context.Context, in *R
 	return out, nil
 }
 
-func (c *votingManagerClient) GetInformationAboutBallot(ctx context.Context, in *GetInformationAboutBallotRequest, opts ...grpc.CallOption) (*GetInformationAboutBallotResponse, error) {
-	out := new(GetInformationAboutBallotResponse)
-	err := c.cc.Invoke(ctx, "/VotingManager/GetInformationAboutBallot", in, out, opts...)
+func (c *votingManagerClient) GetVotingInformation(ctx context.Context, in *GetVotingInformationRequest, opts ...grpc.CallOption) (*GetVotingInformationResponse, error) {
+	out := new(GetVotingInformationResponse)
+	err := c.cc.Invoke(ctx, "/VotingManager/GetVotingInformation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ type VotingManagerServer interface {
 	AddRightToVote(context.Context, *AddRightToVoteRequest) (*emptypb.Empty, error)
 	GetVotingsAvailableToUserID(context.Context, *GetVotingsAvailableToUserIDRequest) (*GetVotingsAvailableToUserIDResponse, error)
 	RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error)
-	GetInformationAboutBallot(context.Context, *GetInformationAboutBallotRequest) (*GetInformationAboutBallotResponse, error)
+	GetVotingInformation(context.Context, *GetVotingInformationRequest) (*GetVotingInformationResponse, error)
 	mustEmbedUnimplementedVotingManagerServer()
 }
 
@@ -125,8 +125,8 @@ func (UnimplementedVotingManagerServer) GetVotingsAvailableToUserID(context.Cont
 func (UnimplementedVotingManagerServer) RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterAddressToVoting not implemented")
 }
-func (UnimplementedVotingManagerServer) GetInformationAboutBallot(context.Context, *GetInformationAboutBallotRequest) (*GetInformationAboutBallotResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetInformationAboutBallot not implemented")
+func (UnimplementedVotingManagerServer) GetVotingInformation(context.Context, *GetVotingInformationRequest) (*GetVotingInformationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVotingInformation not implemented")
 }
 func (UnimplementedVotingManagerServer) mustEmbedUnimplementedVotingManagerServer() {}
 
@@ -231,20 +231,20 @@ func _VotingManager_RegisterAddressToVoting_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VotingManager_GetInformationAboutBallot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetInformationAboutBallotRequest)
+func _VotingManager_GetVotingInformation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetVotingInformationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VotingManagerServer).GetInformationAboutBallot(ctx, in)
+		return srv.(VotingManagerServer).GetVotingInformation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/VotingManager/GetInformationAboutBallot",
+		FullMethod: "/VotingManager/GetVotingInformation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VotingManagerServer).GetInformationAboutBallot(ctx, req.(*GetInformationAboutBallotRequest))
+		return srv.(VotingManagerServer).GetVotingInformation(ctx, req.(*GetVotingInformationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -277,8 +277,8 @@ var VotingManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VotingManager_RegisterAddressToVoting_Handler,
 		},
 		{
-			MethodName: "GetInformationAboutBallot",
-			Handler:    _VotingManager_GetInformationAboutBallot_Handler,
+			MethodName: "GetVotingInformation",
+			Handler:    _VotingManager_GetVotingInformation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
