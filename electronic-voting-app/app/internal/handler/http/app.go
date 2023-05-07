@@ -50,8 +50,8 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.GET("/api/public_key_voting/:voting_id", AuthMiddleware(h.PublicKeyVoting))
 	router.GET("/api/sign_blinded_address", AuthMiddleware(h.SignBlindedAddress))
 	router.POST("/api/register_address", h.RegisterAddress)
+	router.GET("/api/registration_statuses", h.RegistrationStatuses)
 
-	//router.HandlerFunc(http.MethodPost, "/api/register_to_voting", AuthMiddleware(h.RegisterToVoting))
 }
 
 func (h *Handler) ForceEnterDetails(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -194,12 +194,11 @@ func (h *Handler) AvailableVotings(w http.ResponseWriter, r *http.Request, ps ht
 
 	for _, av := range pbVotingsAvailableToUserID {
 		availableVotings = append(availableVotings, &model.AvailableVoting{
-			UserID:     av.GetUserID(),
-			VotingID:   av.GetVotingID(),
-			CreatedOn:  av.GetCreatedOn().AsTime(),
-			Title:      av.GetVotingTitle(),
-			Address:    av.GetVotingAddress(),
-			Registered: false, //TODO to change!
+			UserID:    av.GetUserID(),
+			VotingID:  av.GetVotingID(),
+			CreatedOn: av.GetCreatedOn().AsTime(),
+			Title:     av.GetVotingTitle(),
+			Address:   av.GetVotingAddress(),
 		})
 	}
 
@@ -297,93 +296,38 @@ func (h *Handler) SignBlindedAddress(w http.ResponseWriter, r *http.Request, ps 
 }
 
 func (h *Handler) RegisterAddress(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var registerAddressReq model.RegisterAddressReq
 
-}
-
-/*func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	c, _ := r.Context().Value("cookie_session_token").(*http.Cookie)
-	sessionToken := c.Value
-	userSession := sessions[sessionToken]
-
-	var registerToVotingReq model.RegisterToVotingReq
-	err := json.NewDecoder(r.Body).Decode(&registerToVotingReq)
+	err := json.NewDecoder(r.Body).Decode(&registerAddressReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	reqGetPublicKeyBytes := &pbvv.GetPublicKeyForVotingIDRequest{VotingID: registerToVotingReq.VotingID}
-
-	respGetPublicKeyBytes, err := h.votingVerifierClient.GetPublicKeyForVotingID(r.Context(), reqGetPublicKeyBytes)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	registerAddressReqToVV := &pbvv.RegisterAddressRequest{
+		Address:       registerAddressReq.Address,
+		SignedAddress: registerAddressReq.SignedAddress,
+		VotingID:      registerAddressReq.VotingID,
 	}
 
-	publicKeyBytes := respGetPublicKeyBytes.GetPublicKeyBytes()
-
-	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
-	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	token := make([]byte, 16)
-	_, err = rand.Read(token)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	blindedToken, unblinder, err := rsablind.Blind(publicKey, token)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	reqSignBlindedToken := &pbvv.SignBlindedTokenRequest{
-		UserID:       userSession.userID,
-		VotingID:     registerToVotingReq.VotingID,
-		BlindedToken: blindedToken,
-	}
-
-	respSignBlindedToken, err := h.votingVerifierClient.SignBlindedToken(r.Context(), reqSignBlindedToken)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	signedBlindedToken := respSignBlindedToken.GetSignedBlindedToken()
-
-	signedToken := rsablind.Unblind(publicKey, signedBlindedToken, unblinder)
-
-	passwordHash, err := h.userStorage.GetPasswordHashByUserID(r.Context(), userSession.userID)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	wd, _ := os.Getwd()
-	keyStorePath := fmt.Sprintf("%s/internal/keystorage", wd)
-	address, err := eth.GenerateNewAccount(keyStorePath, passwordHash)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	reqToVotingVerifier := &pbvv.RegisterAddressToVotingBySignedTokenRequest{
-		VotingID:    registerToVotingReq.VotingID,
-		Token:       token,
-		SignedToken: signedToken,
-		Address:     address,
-	}
-
-	_, err = h.votingVerifierClient.RegisterAddressToVotingBySignedToken(r.Context(), reqToVotingVerifier)
+	_, err = h.votingVerifierClient.RegisterAddress(r.Context(), registerAddressReqToVV)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-}*/
+}
+
+func (h *Handler) RegistrationStatuses(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var signBlindedAddressReq model.SignBlindedAddressReq
+
+	err := json.NewDecoder(r.Body).Decode(&signBlindedAddressReq)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+}

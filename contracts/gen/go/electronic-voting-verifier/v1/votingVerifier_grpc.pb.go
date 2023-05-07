@@ -27,6 +27,7 @@ type VotingVerifierClient interface {
 	SignBlindedAddress(ctx context.Context, in *SignBlindedAddressRequest, opts ...grpc.CallOption) (*SignBlindedAddressResponse, error)
 	RegisterAddress(ctx context.Context, in *RegisterAddressRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GenerateRSAKeyPairForVotingID(ctx context.Context, in *GenerateRSAKeyPairForVotingIDRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetRegistrationStatuses(ctx context.Context, in *GetRegistrationStatusesRequest, opts ...grpc.CallOption) (*GetRegistrationStatusesResponse, error)
 }
 
 type votingVerifierClient struct {
@@ -73,6 +74,15 @@ func (c *votingVerifierClient) GenerateRSAKeyPairForVotingID(ctx context.Context
 	return out, nil
 }
 
+func (c *votingVerifierClient) GetRegistrationStatuses(ctx context.Context, in *GetRegistrationStatusesRequest, opts ...grpc.CallOption) (*GetRegistrationStatusesResponse, error) {
+	out := new(GetRegistrationStatusesResponse)
+	err := c.cc.Invoke(ctx, "/VotingVerifier/GetRegistrationStatuses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VotingVerifierServer is the server API for VotingVerifier service.
 // All implementations must embed UnimplementedVotingVerifierServer
 // for forward compatibility
@@ -81,6 +91,7 @@ type VotingVerifierServer interface {
 	SignBlindedAddress(context.Context, *SignBlindedAddressRequest) (*SignBlindedAddressResponse, error)
 	RegisterAddress(context.Context, *RegisterAddressRequest) (*emptypb.Empty, error)
 	GenerateRSAKeyPairForVotingID(context.Context, *GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error)
+	GetRegistrationStatuses(context.Context, *GetRegistrationStatusesRequest) (*GetRegistrationStatusesResponse, error)
 	mustEmbedUnimplementedVotingVerifierServer()
 }
 
@@ -99,6 +110,9 @@ func (UnimplementedVotingVerifierServer) RegisterAddress(context.Context, *Regis
 }
 func (UnimplementedVotingVerifierServer) GenerateRSAKeyPairForVotingID(context.Context, *GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateRSAKeyPairForVotingID not implemented")
+}
+func (UnimplementedVotingVerifierServer) GetRegistrationStatuses(context.Context, *GetRegistrationStatusesRequest) (*GetRegistrationStatusesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegistrationStatuses not implemented")
 }
 func (UnimplementedVotingVerifierServer) mustEmbedUnimplementedVotingVerifierServer() {}
 
@@ -185,6 +199,24 @@ func _VotingVerifier_GenerateRSAKeyPairForVotingID_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VotingVerifier_GetRegistrationStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRegistrationStatusesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VotingVerifierServer).GetRegistrationStatuses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/VotingVerifier/GetRegistrationStatuses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VotingVerifierServer).GetRegistrationStatuses(ctx, req.(*GetRegistrationStatusesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VotingVerifier_ServiceDesc is the grpc.ServiceDesc for VotingVerifier service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -207,6 +239,10 @@ var VotingVerifier_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateRSAKeyPairForVotingID",
 			Handler:    _VotingVerifier_GenerateRSAKeyPairForVotingID_Handler,
+		},
+		{
+			MethodName: "GetRegistrationStatuses",
+			Handler:    _VotingVerifier_GetRegistrationStatuses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

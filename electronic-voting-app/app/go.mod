@@ -3,8 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-app
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507131042-05f89a578265
-	github.com/cryptoballot/rsablind v0.0.0-20170925165423-14f9913880b7
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507143818-f0bb42396378
 	github.com/ethereum/go-ethereum v1.11.6
 	github.com/georgysavva/scany v1.2.1
 	github.com/google/uuid v1.3.0
@@ -21,7 +20,6 @@ require (
 require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
-	github.com/cryptoballot/fdh v0.0.0-20170924224734-5eb31ce2010c // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect

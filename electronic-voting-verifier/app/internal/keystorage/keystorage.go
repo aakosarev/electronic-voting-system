@@ -99,6 +99,25 @@ func (ks *KeyStorage) getPrivateKeyForVotingID(votingID int32) (*rsa.PrivateKey,
 	return privateKey, nil
 }
 
+func (ks *KeyStorage) getPublicKeyForVotingID(votingID int32) (*rsa.PublicKey, error) {
+	wd, _ := os.Getwd()
+	filenamePublicKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_public.pem", wd, strconv.Itoa(int(votingID)))
+
+	publicKeyBytes, err := os.ReadFile(filenamePublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
+
+	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKey, nil
+}
+
 func (ks *KeyStorage) SignBlindedAddress(blindedAddress []byte, votingID int32) ([]byte, error) {
 	privateKey, err := ks.getPrivateKeyForVotingID(votingID)
 	if err != nil {
@@ -113,20 +132,13 @@ func (ks *KeyStorage) SignBlindedAddress(blindedAddress []byte, votingID int32) 
 	return signedBlindedAddress, nil
 }
 
-func (ks *KeyStorage) VerifySignature(signedToken, token []byte, votingID int32) (bool, error) {
-
-	publicKeyBytes, err := ks.GetPublicKeyBytesForVotingID(votingID)
+func (ks *KeyStorage) VerifySignature(signedAddress []byte, address string, votingID int32) (bool, error) {
+	publicKey, err := ks.getPublicKeyForVotingID(votingID)
 	if err != nil {
 		return false, err
 	}
 
-	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
-	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
-	if err != nil {
-		return false, err
-	}
-
-	if err = rsablind.VerifyBlindSignature(publicKey, token, signedToken); err != nil {
+	if err = rsablind.VerifyBlindSignature(publicKey, []byte(address), signedAddress); err != nil {
 		return false, err
 	}
 

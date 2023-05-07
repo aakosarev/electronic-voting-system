@@ -29,6 +29,15 @@ func NewHandler(keystorage *keystorage.KeyStorage, storage *storage.Storage, srv
 	}
 }
 
+func (h *Handler) GenerateRSAKeyPairForVotingID(ctx context.Context, req *pbvv.GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error) {
+	err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID())
+	if err != nil {
+		return nil, fmt.Errorf("generate rsa key pair for voting id [%d]: %v", req.GetVotingID(), err)
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (h *Handler) GetPublicKeyForVotingID(ctx context.Context, req *pbvv.GetPublicKeyForVotingIDRequest) (*pbvv.GetPublicKeyForVotingIDResponse, error) {
 	if err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID()); err != nil {
 		return nil, err
@@ -86,9 +95,9 @@ func (h *Handler) SignBlindedAddress(ctx context.Context, req *pbvv.SignBlindedA
 	return &pbvv.SignBlindedAddressResponse{SignedBlindedAddress: signedBlindedAddress}, nil
 }
 
-/*func (h *Handler) RegisterAddressToVotingBySignedToken(ctx context.Context, req *pbvv.RegisterAddressToVotingBySignedTokenRequest) (*emptypb.Empty, error) {
+func (h *Handler) RegisterAddress(ctx context.Context, req *pbvv.RegisterAddressRequest) (*emptypb.Empty, error) {
 
-	ok, err := h.keystorage.VerifySignature(req.GetSignedToken(), req.GetToken(), req.GetVotingID())
+	ok, err := h.keystorage.VerifySignature(req.GetSignedAddress(), req.GetAddress(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +106,7 @@ func (h *Handler) SignBlindedAddress(ctx context.Context, req *pbvv.SignBlindedA
 		return nil, errors.New("signature not verified")
 	}
 
-	countRequests, err := h.storage.CheckExistsRegisterAddressToVotingRequest(ctx, req.GetVotingID(), req.GetAddress())
+	countRequests, err := h.storage.CheckExistsRegisterAddressRequest(ctx, req.GetAddress(), req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
@@ -106,30 +115,19 @@ func (h *Handler) SignBlindedAddress(ctx context.Context, req *pbvv.SignBlindedA
 		return nil, errors.New("such an address registration request already exists")
 	}
 
-	reqToVotingManager := &pbvm.RegisterAddressToVotingRequest{
+	registerAddressToVotingReqToVM := &pbvm.RegisterAddressToVotingRequest{
 		VotingID: req.GetVotingID(),
 		Address:  req.GetAddress(),
 	}
 
-	_, err = h.votingManagerClient.RegisterAddressToVoting(ctx, reqToVotingManager)
+	_, err = h.votingManagerClient.RegisterAddressToVoting(ctx, registerAddressToVotingReqToVM)
 	if err != nil {
 		return nil, err
 	}
 
-	signedTokenHash := sha256.Sum256([]byte(req.GetSignedToken()))
-
-	err = h.storage.AddRegisterAddressToVotingRequest(ctx, req.GetAddress(), req.GetVotingID(), hex.EncodeToString(signedTokenHash[:]))
+	err = h.storage.AddRegisterAddressRequest(ctx, req.GetAddress(), req.GetVotingID())
 	if err != nil {
 		return nil, err
-	}
-
-	return &emptypb.Empty{}, nil
-}*/
-
-func (h *Handler) GenerateRSAKeyPairForVotingID(ctx context.Context, req *pbvv.GenerateRSAKeyPairForVotingIDRequest) (*emptypb.Empty, error) {
-	err := h.keystorage.GenerateRSAKeyPairForVotingID(req.GetVotingID())
-	if err != nil {
-		return nil, fmt.Errorf("generate rsa key pair for voting id [%d]: %v", req.GetVotingID(), err)
 	}
 
 	return &emptypb.Empty{}, nil

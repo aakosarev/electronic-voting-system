@@ -32,9 +32,18 @@ message GenerateRSAKeyPairForVotingIDRequest {
   int32 votingID = 1;
 }
 
+message GetRegistrationStatusesRequest {
+  map<int32, string> address = 1;
+}
+
+message GetRegistrationStatusesResponse {
+  map<int32, bool> statuses = 1;
+}
+
 service VotingVerifier {
   rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
   rpc SignBlindedAddress(SignBlindedAddressRequest) returns (SignBlindedAddressResponse);
   rpc RegisterAddress(RegisterAddressRequest) returns (google.protobuf.Empty);
   rpc GenerateRSAKeyPairForVotingID(GenerateRSAKeyPairForVotingIDRequest) returns (google.protobuf.Empty);
+  rpc GetRegistrationStatuses(GetRegistrationStatusesRequest) returns (GetRegistrationStatusesResponse);
 }
