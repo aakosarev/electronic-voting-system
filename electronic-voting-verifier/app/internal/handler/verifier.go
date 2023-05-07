@@ -96,7 +96,6 @@ func (h *Handler) SignBlindedAddress(ctx context.Context, req *pbvv.SignBlindedA
 }
 
 func (h *Handler) RegisterAddress(ctx context.Context, req *pbvv.RegisterAddressRequest) (*emptypb.Empty, error) {
-
 	ok, err := h.keystorage.VerifySignature(req.GetSignedAddress(), req.GetAddress(), req.GetVotingID())
 	if err != nil {
 		return nil, err
@@ -132,3 +131,9 @@ func (h *Handler) RegisterAddress(ctx context.Context, req *pbvv.RegisterAddress
 
 	return &emptypb.Empty{}, nil
 }
+
+/*func (h *Handler) GetRegistrationStatuses(ctx context.Context, req *pbvv.GetRegistrationStatusesRequest) (*pbvv.GetRegistrationStatusesResponse, error) {
+
+
+	re
+}*/

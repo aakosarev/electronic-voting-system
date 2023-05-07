@@ -33,7 +33,7 @@ message GenerateRSAKeyPairForVotingIDRequest {
 }
 
 message GetRegistrationStatusesRequest {
-  map<int32, string> address = 1;
+  map<int32, string> addresses = 1;
 }
 
 message GetRegistrationStatusesResponse {
