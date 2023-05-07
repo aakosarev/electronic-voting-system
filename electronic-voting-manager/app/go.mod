@@ -3,7 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-manager
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507102038-c51e2054b956
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507124853-2eaa6263ef85
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/georgysavva/scany v1.2.1
 	github.com/ilyakaznacheev/cleanenv v1.4.2

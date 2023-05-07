@@ -54,7 +54,7 @@ func (h *Handler) Register(router *httprouter.Router) {
 	router.GET("/api/force_enter_details", AuthMiddleware(h.ForceEnterDetails))
 	router.GET("/api/available_votings", AuthMiddleware(h.AvailableVotings))
 	router.GET("/api/public_key_voting/:voting_id", AuthMiddleware(h.PublicKeyVoting))
-	router.GET("/api/sign_blinded_public_key", AuthMiddleware(h.SignBlindedPublicKey))
+	router.GET("/api/sign_blinded_address", AuthMiddleware(h.SignBlindedAddress))
 
 	//router.HandlerFunc(http.MethodPost, "/api/register_to_voting", AuthMiddleware(h.RegisterToVoting))
 }
@@ -258,7 +258,7 @@ func (h *Handler) PublicKeyVoting(w http.ResponseWriter, r *http.Request, ps htt
 	w.Write(publicKeyRespJson)
 }
 
-func (h *Handler) SignBlindedPublicKey(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (h *Handler) SignBlindedAddress(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
 }

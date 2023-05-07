@@ -46,12 +46,12 @@ func (h *Handler) GetPublicKeyForVotingID(ctx context.Context, req *pbvv.GetPubl
 func (h *Handler) SignBlindedPublicKey(ctx context.Context, req *pbvv.SignBlindedPublicKeyRequest) (*pbvv.SignBlindedPublicKeyResponse, error) {
 	getVotingsAvailableToUserIDReqToVM := &pbvm.GetVotingsAvailableToUserIDRequest{UserID: req.GetUserID()}
 
-	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.(ctx, reqToVotingManager)
+	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.GetVotingsAvailableToUserID(ctx, getVotingsAvailableToUserIDReqToVM)
 	if err != nil {
 		return nil, err
 	}
 
-	pbAvailableVotings := resp.GetVotingsAvailableToUser()
+	pbAvailableVotings := getVotingsAvailableToUserIDRespFromVM.GetVotingsAvailableToUserID()
 
 	isAllowedVote := false
 	for _, av := range pbAvailableVotings {
