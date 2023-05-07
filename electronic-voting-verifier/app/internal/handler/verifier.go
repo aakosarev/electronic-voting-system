@@ -43,10 +43,10 @@ func (h *Handler) GetPublicKeyForVotingID(ctx context.Context, req *pbvv.GetPubl
 	return &pbvv.GetPublicKeyForVotingIDResponse{PublicKeyBytes: publicKeyBytes}, nil
 }
 
-func (h *Handler) SignBlindedToken(ctx context.Context, req *pbvv.SignBlindedTokenRequest) (*pbvv.SignBlindedTokenResponse, error) {
-	reqToVotingManager := &pbvm.GetVotingsAvailableToUserRequest{UserID: req.GetUserID()}
+func (h *Handler) SignBlindedPublicKey(ctx context.Context, req *pbvv.SignBlindedPublicKeyRequest) (*pbvv.SignBlindedPublicKeyResponse, error) {
+	getVotingsAvailableToUserIDReqToVM := &pbvm.GetVotingsAvailableToUserIDRequest{UserID: req.GetUserID()}
 
-	resp, err := h.votingManagerClient.GetVotingsAvailableToUser(ctx, reqToVotingManager)
+	getVotingsAvailableToUserIDRespFromVM, err := h.votingManagerClient.(ctx, reqToVotingManager)
 	if err != nil {
 		return nil, err
 	}

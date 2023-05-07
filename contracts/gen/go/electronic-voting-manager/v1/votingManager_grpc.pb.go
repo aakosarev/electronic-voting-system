@@ -26,7 +26,7 @@ type VotingManagerClient interface {
 	CreateVoting(ctx context.Context, in *CreateVotingRequest, opts ...grpc.CallOption) (*CreateVotingResponse, error)
 	GetAllVotings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAllVotingsResponse, error)
 	AddRightToVote(ctx context.Context, in *AddRightToVoteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetVotingsAvailableToUser(ctx context.Context, in *GetVotingsAvailableToUserIDRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserIDResponse, error)
+	GetVotingsAvailableToUserID(ctx context.Context, in *GetVotingsAvailableToUserIDRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserIDResponse, error)
 	RegisterAddressToVoting(ctx context.Context, in *RegisterAddressToVotingRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetInformationAboutBallot(ctx context.Context, in *GetInformationAboutBallotRequest, opts ...grpc.CallOption) (*GetInformationAboutBallotResponse, error)
 }
@@ -66,9 +66,9 @@ func (c *votingManagerClient) AddRightToVote(ctx context.Context, in *AddRightTo
 	return out, nil
 }
 
-func (c *votingManagerClient) GetVotingsAvailableToUser(ctx context.Context, in *GetVotingsAvailableToUserIDRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserIDResponse, error) {
+func (c *votingManagerClient) GetVotingsAvailableToUserID(ctx context.Context, in *GetVotingsAvailableToUserIDRequest, opts ...grpc.CallOption) (*GetVotingsAvailableToUserIDResponse, error) {
 	out := new(GetVotingsAvailableToUserIDResponse)
-	err := c.cc.Invoke(ctx, "/VotingManager/GetVotingsAvailableToUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/VotingManager/GetVotingsAvailableToUserID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ type VotingManagerServer interface {
 	CreateVoting(context.Context, *CreateVotingRequest) (*CreateVotingResponse, error)
 	GetAllVotings(context.Context, *emptypb.Empty) (*GetAllVotingsResponse, error)
 	AddRightToVote(context.Context, *AddRightToVoteRequest) (*emptypb.Empty, error)
-	GetVotingsAvailableToUser(context.Context, *GetVotingsAvailableToUserIDRequest) (*GetVotingsAvailableToUserIDResponse, error)
+	GetVotingsAvailableToUserID(context.Context, *GetVotingsAvailableToUserIDRequest) (*GetVotingsAvailableToUserIDResponse, error)
 	RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error)
 	GetInformationAboutBallot(context.Context, *GetInformationAboutBallotRequest) (*GetInformationAboutBallotResponse, error)
 	mustEmbedUnimplementedVotingManagerServer()
@@ -119,8 +119,8 @@ func (UnimplementedVotingManagerServer) GetAllVotings(context.Context, *emptypb.
 func (UnimplementedVotingManagerServer) AddRightToVote(context.Context, *AddRightToVoteRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRightToVote not implemented")
 }
-func (UnimplementedVotingManagerServer) GetVotingsAvailableToUser(context.Context, *GetVotingsAvailableToUserIDRequest) (*GetVotingsAvailableToUserIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetVotingsAvailableToUser not implemented")
+func (UnimplementedVotingManagerServer) GetVotingsAvailableToUserID(context.Context, *GetVotingsAvailableToUserIDRequest) (*GetVotingsAvailableToUserIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetVotingsAvailableToUserID not implemented")
 }
 func (UnimplementedVotingManagerServer) RegisterAddressToVoting(context.Context, *RegisterAddressToVotingRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterAddressToVoting not implemented")
@@ -195,20 +195,20 @@ func _VotingManager_AddRightToVote_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VotingManager_GetVotingsAvailableToUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _VotingManager_GetVotingsAvailableToUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetVotingsAvailableToUserIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VotingManagerServer).GetVotingsAvailableToUser(ctx, in)
+		return srv.(VotingManagerServer).GetVotingsAvailableToUserID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/VotingManager/GetVotingsAvailableToUser",
+		FullMethod: "/VotingManager/GetVotingsAvailableToUserID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VotingManagerServer).GetVotingsAvailableToUser(ctx, req.(*GetVotingsAvailableToUserIDRequest))
+		return srv.(VotingManagerServer).GetVotingsAvailableToUserID(ctx, req.(*GetVotingsAvailableToUserIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -269,8 +269,8 @@ var VotingManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VotingManager_AddRightToVote_Handler,
 		},
 		{
-			MethodName: "GetVotingsAvailableToUser",
-			Handler:    _VotingManager_GetVotingsAvailableToUser_Handler,
+			MethodName: "GetVotingsAvailableToUserID",
+			Handler:    _VotingManager_GetVotingsAvailableToUserID_Handler,
 		},
 		{
 			MethodName: "RegisterAddressToVoting",

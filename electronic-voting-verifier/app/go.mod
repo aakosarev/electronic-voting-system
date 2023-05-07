@@ -3,7 +3,7 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-verifier
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507073239-55d1e5566a95
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230507124348-6363d68266df
 	github.com/cryptoballot/rsablind v0.0.0-20170925165423-14f9913880b7
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgconn v1.14.0

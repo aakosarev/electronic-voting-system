@@ -74,7 +74,7 @@ service VotingManager {
   rpc CreateVoting(CreateVotingRequest) returns (CreateVotingResponse);
   rpc GetAllVotings(google.protobuf.Empty) returns (GetAllVotingsResponse);
   rpc AddRightToVote(AddRightToVoteRequest) returns (google.protobuf.Empty);
-  rpc GetVotingsAvailableToUser(GetVotingsAvailableToUserIDRequest) returns (GetVotingsAvailableToUserIDResponse);
+  rpc GetVotingsAvailableToUserID(GetVotingsAvailableToUserIDRequest) returns (GetVotingsAvailableToUserIDResponse);
   rpc RegisterAddressToVoting(RegisterAddressToVotingRequest) returns (google.protobuf.Empty);
   rpc GetInformationAboutBallot(GetInformationAboutBallotRequest) returns (GetInformationAboutBallotResponse);
 }
