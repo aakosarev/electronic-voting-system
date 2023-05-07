@@ -17,7 +17,7 @@ func NewKeyStorage() *KeyStorage {
 	return &KeyStorage{}
 }
 
-func (ks *KeyStorage) GenerateKeyPairForVotingID(votingID int32) error {
+func (ks *KeyStorage) GenerateRSAKeyPairForVotingID(votingID int32) error {
 	wd, _ := os.Getwd()
 	filenamePrivateKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_private.pem", wd, strconv.Itoa(int(votingID)))
 	filenamePublicKey := fmt.Sprintf("%s/internal/keystorage/keys/voting_%s_public.pem", wd, strconv.Itoa(int(votingID)))
@@ -36,13 +36,13 @@ func (ks *KeyStorage) GenerateKeyPairForVotingID(votingID int32) error {
 			Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 		}
 
-		privateFile, err := os.Create(filenamePrivateKey)
+		privateKeyFile, err := os.Create(filenamePrivateKey)
 		if err != nil {
 			return err
 		}
-		defer privateFile.Close()
+		defer privateKeyFile.Close()
 
-		err = pem.Encode(privateFile, privateKeyPEM)
+		err = pem.Encode(privateKeyFile, privateKeyPEM)
 		if err != nil {
 			return err
 		}
@@ -52,13 +52,13 @@ func (ks *KeyStorage) GenerateKeyPairForVotingID(votingID int32) error {
 			Bytes: x509.MarshalPKCS1PublicKey(&privateKey.PublicKey),
 		}
 
-		publicFile, err := os.Create(filenamePublicKey)
+		publicKeyFile, err := os.Create(filenamePublicKey)
 		if err != nil {
 			return err
 		}
-		defer publicFile.Close()
+		defer publicKeyFile.Close()
 
-		err = pem.Encode(publicFile, publicKeyPEM)
+		err = pem.Encode(publicKeyFile, publicKeyPEM)
 		if err != nil {
 			return err
 		}

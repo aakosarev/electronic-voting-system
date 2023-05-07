@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -37,8 +36,6 @@ func (h *Handler) Register(router *httprouter.Router) {
 }
 
 func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	createVotingReq := model.CreateVotingReq{}
 	err := json.NewDecoder(r.Body).Decode(&createVotingReq)
 	if err != nil {
@@ -48,18 +45,20 @@ func (h *Handler) CreateVoting(w http.ResponseWriter, r *http.Request) {
 
 	options := strings.Split(createVotingReq.Options, ";")
 
-	req := &pbvm.CreateVotingRequest{
+	createVotingReqToVM := &pbvm.CreateVotingRequest{
 		VotingTitle:   createVotingReq.Title,
 		VotingOptions: options,
 		EndTime:       timestamppb.New(createVotingReq.EndTime),
 	}
 
-	_, err = h.votingManagerClient.CreateVoting(r.Context(), req)
+	_, err = h.votingManagerClient.CreateVoting(r.Context(), createVotingReqToVM)
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	//request to verifier for creating RSA key pair
+
 	w.WriteHeader(http.StatusOK)
 }
 

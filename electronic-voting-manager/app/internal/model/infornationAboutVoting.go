@@ -7,7 +7,7 @@ type InformationAboutVoting struct {
 	OptionsCompleted       bool
 	NumberRegisteredVoters int64
 	EndTime                time.Time
-	Options                map[int64]Option
+	Options                map[int64]*Option
 }
 
 type Option struct {

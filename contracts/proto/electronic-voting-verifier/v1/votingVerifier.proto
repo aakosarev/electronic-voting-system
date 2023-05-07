@@ -29,8 +29,13 @@ message RegisterAddressToVotingBySignedTokenRequest {
   string address = 4;
 }
 
+message GenerateRSAKeyPairForVotingIDRequest {
+  int32 votingID = 1;
+}
+
 service VotingVerifier {
   rpc GetPublicKeyForVotingID(GetPublicKeyForVotingIDRequest) returns (GetPublicKeyForVotingIDResponse);
   rpc SignBlindedToken(SignBlindedTokenRequest) returns (SignBlindedTokenResponse);
   rpc RegisterAddressToVotingBySignedToken(RegisterAddressToVotingBySignedTokenRequest) returns (google.protobuf.Empty);
+  rpc GenerateRSAKeyPairForVotingID(GenerateRSAKeyPairForVotingIDRequest) returns (google.protobuf.Empty);
 }

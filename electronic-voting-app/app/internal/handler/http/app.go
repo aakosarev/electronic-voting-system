@@ -256,7 +256,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	respGetPublicKeyBytes, err := h.votingVerifierClient.GetPublicKeyForVotingID(r.Context(), reqGetPublicKeyBytes)
 	if err != nil {
-		log.Println("1", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -266,7 +265,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	publicKeyPEM, _ := pem.Decode(publicKeyBytes)
 	publicKey, err := x509.ParsePKCS1PublicKey(publicKeyPEM.Bytes)
 	if err != nil {
-		log.Println("2", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -274,14 +272,12 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	token := make([]byte, 16)
 	_, err = rand.Read(token)
 	if err != nil {
-		log.Println("3", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	blindedToken, unblinder, err := rsablind.Blind(publicKey, token)
 	if err != nil {
-		log.Println("4", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -294,7 +290,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	respSignBlindedToken, err := h.votingVerifierClient.SignBlindedToken(r.Context(), reqSignBlindedToken)
 	if err != nil {
-		log.Println("5", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -305,7 +300,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash, err := h.userStorage.GetPasswordHashByUsername(r.Context(), userSession.username)
 	if err != nil {
-		log.Println("6", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -314,7 +308,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 	keyStorePath := fmt.Sprintf("%s/internal/keystorage", wd)
 	address, err := eth.GenerateNewAccount(keyStorePath, passwordHash)
 	if err != nil {
-		log.Println("7", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -328,7 +321,6 @@ func (h *Handler) RegisterToVoting(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.votingVerifierClient.RegisterAddressToVotingBySignedToken(r.Context(), reqToVotingVerifier)
 	if err != nil {
-		log.Println("8", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

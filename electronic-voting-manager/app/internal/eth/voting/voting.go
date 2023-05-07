@@ -293,12 +293,12 @@ func GetInformationAboutVoting(session *ContractSession, client *ethclient.Clien
 	endTime := time.Unix(endTimeBigInt.Int64(), 0)
 	numberOptionsBigInt, _ := session.GetVotingOptionsLength()
 
-	options := make(map[int64]model.Option, numberOptionsBigInt.Int64())
+	options := make(map[int64]*model.Option, numberOptionsBigInt.Int64())
 
 	for i := int64(0); i < numberOptionsBigInt.Int64(); i++ {
 		name, _ := session.GetNameVotingOption(big.NewInt(i))
 		numberVotes, _ := session.GetNumberVotesVotingOption(big.NewInt(i))
-		options[i] = model.Option{
+		options[i] = &model.Option{
 			Name:        name,
 			NumberVotes: numberVotes.Int64(),
 		}

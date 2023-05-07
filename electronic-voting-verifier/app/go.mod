@@ -3,9 +3,8 @@ module github.com/aakosarev/electronic-voting-system/electronic-voting-verifier
 go 1.19
 
 require (
-	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230502141757-0fa35ba5b846
+	github.com/aakosarev/electronic-voting-system/contracts v0.0.0-20230506092912-e44c5b8100d3
 	github.com/cryptoballot/rsablind v0.0.0-20170925165423-14f9913880b7
-	github.com/georgysavva/scany v1.2.1
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx/v4 v4.18.1
@@ -25,6 +24,7 @@ require (
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
