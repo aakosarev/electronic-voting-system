@@ -107,31 +107,30 @@ func (h *Handler) RegisterAddressToVoting(ctx context.Context, req *pb.RegisterA
 	return &emptypb.Empty{}, nil
 }
 
-func (h *Handler) GetInformationAboutBallot(ctx context.Context, req *pb.GetInformationAboutBallotRequest) (*pb.GetInformationAboutBallotResponse, error) {
+func (h *Handler) GetVotingInformation(ctx context.Context, req *pb.GetVotingInformationRequest) (*pb.GetVotingInformationResponse, error) {
 	v, err := h.storage.FindVotingByID(ctx, req.GetVotingID())
 	if err != nil {
 		return nil, err
 	}
 
-	informationAboutVoting, err := voting.GetInformationAboutVoting(h.contractSession, h.ethclient, common.HexToAddress(v.Address))
+	votingInformation, err := voting.GetVotingInformation(h.contractSession, h.ethclient, common.HexToAddress(v.Address))
 	if err != nil {
 		return nil, err
 	}
 
 	pbOptions := make(map[int64]*pb.Option)
 
-	for key, value := range informationAboutVoting.Options {
-		pbOptions[key] = &pb.Option{
-			Name:        value.Name,
-			NumberVotes: value.NumberVotes,
+	for index, option := range votingInformation.Options {
+		pbOptions[index] = &pb.Option{
+			Name:        option.Name,
+			NumberVotes: option.NumberVotes,
 		}
 	}
 
-	return &pb.GetInformationAboutBallotResponse{
-		Title:                  informationAboutVoting.Title,
-		OptionsCompleted:       informationAboutVoting.OptionsCompleted,
-		NumberRegisteredVoters: informationAboutVoting.NumberRegisteredVoters,
-		EndTime:                timestamppb.New(informationAboutVoting.EndTime),
+	return &pb.GetVotingInformationResponse{
+		Title:                  votingInformation.Title,
+		NumberRegisteredVoters: votingInformation.NumberRegisteredVoters,
+		EndTime:                timestamppb.New(votingInformation.EndTime),
 		Options:                pbOptions,
 	}, nil
 }

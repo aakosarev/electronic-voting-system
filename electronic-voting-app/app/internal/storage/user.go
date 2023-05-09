@@ -78,3 +78,62 @@ func (s *UserStorage) GetForceEnterDetailsByUserID(ctx context.Context, userID i
 
 	return forceEnterDetails, nil
 }
+
+func (s *UserStorage) DemoAddRegistration(ctx context.Context, privateKey string, userID, votingID int32) error {
+	query := `
+		INSERT INTO demo_registrations(private_key, user_id, voting_id)
+		VALUES ($1, $2, $3);
+	`
+
+	_, err := s.client.Exec(ctx, query, privateKey, userID, votingID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserStorage) DemoGetPrivateKeys(ctx context.Context, userID int32, votingIDs []int32) (map[int32]string, error) {
+	query := `
+		SELECT * FROM demo_registrations 
+		WHERE user_id = $1 AND voting_id = ANY($2);
+	`
+
+	rows, err := s.client.Query(ctx, query, userID, votingIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	privateKeys := make(map[int32]string)
+
+	for rows.Next() {
+		var privateKey string
+		var usrID int32
+		var votingID int32
+		err = rows.Scan(&privateKey, &usrID, &votingID)
+		if err != nil {
+			return nil, err
+		}
+
+		privateKeys[votingID] = privateKey
+	}
+
+	return privateKeys, nil
+}
+
+func (s *UserStorage) DemoGetPrivateKey(ctx context.Context, userID, votingID int32) (string, error) {
+	query := `
+		SELECT private_key FROM demo_registrations 
+		WHERE user_id = $1 AND voting_id = $2;
+	`
+
+	var privateKey string
+
+	err := pgxscan.Get(ctx, s.client, &privateKey, query, userID, votingID)
+	if err != nil {
+		return "", err
+	}
+
+	return privateKey, nil
+}

@@ -189,7 +189,7 @@ func completeOptions(session *ContractSession, client *ethclient.Client, address
 		return fmt.Errorf("failed complition voting options: %w", err)
 	}
 
-	timeout := 3 * time.Minute
+	timeout := 2 * time.Minute
 	waitUntil := time.Now().Add(timeout)
 	breakLoop := false
 	for !breakLoop {
@@ -246,7 +246,7 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 		return fmt.Errorf("error pending nonce: %w", err)
 	}
 
-	value := big.NewInt(10000000000000000) // in wei
+	value := big.NewInt(50000000000000000) // in wei
 
 	tx = types.NewTransaction(nonce, voterAddress, value, session.TransactOpts.GasLimit, session.TransactOpts.GasPrice, nil)
 
@@ -280,7 +280,7 @@ func RegisterAddressToVoting(session *ContractSession, client *ethclient.Client,
 	return nil
 }
 
-func GetInformationAboutVoting(session *ContractSession, client *ethclient.Client, address common.Address) (*model.InformationAboutVoting, error) {
+func GetVotingInformation(session *ContractSession, client *ethclient.Client, address common.Address) (*model.VotingInformation, error) {
 	err := loadContract(session, client, address)
 	if err != nil {
 		return nil, err
@@ -288,7 +288,6 @@ func GetInformationAboutVoting(session *ContractSession, client *ethclient.Clien
 
 	votingTitle, _ := session.GetVotingTitle()
 	numberRegisteredVotersBigInt, _ := session.GetNumberRegisteredVoters()
-	optionsCompleted, _ := session.GetOptionsCompleted()
 	endTimeBigInt, _ := session.GetVotingEndTime()
 	endTime := time.Unix(endTimeBigInt.Int64(), 0)
 	numberOptionsBigInt, _ := session.GetVotingOptionsLength()
@@ -304,9 +303,8 @@ func GetInformationAboutVoting(session *ContractSession, client *ethclient.Clien
 		}
 	}
 
-	return &model.InformationAboutVoting{
+	return &model.VotingInformation{
 		Title:                  votingTitle,
-		OptionsCompleted:       optionsCompleted,
 		NumberRegisteredVoters: numberRegisteredVotersBigInt.Int64(),
 		EndTime:                endTime,
 		Options:                options,

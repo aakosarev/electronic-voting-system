@@ -56,7 +56,7 @@ func (a *App) startHTTP() error {
 
 	a.httpServer = &http.Server{
 		Handler:      a.router,
-		WriteTimeout: 5 * time.Minute, //TODO get in cfg
+		WriteTimeout: 5 * time.Minute,
 		ReadTimeout:  5 * time.Minute,
 	}
 

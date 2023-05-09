@@ -2,9 +2,8 @@ package model
 
 import "time"
 
-type InformationAboutVoting struct {
+type VotingInformation struct {
 	Title                  string
-	OptionsCompleted       bool
 	NumberRegisteredVoters int64
 	EndTime                time.Time
 	Options                map[int64]*Option
